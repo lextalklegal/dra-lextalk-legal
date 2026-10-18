@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "check": "node --check src/index.js && node --check public/app.js && node --check public/admin.js && node --check public/setup.js",
+    "check": "node --check src/index.js && node --check public/app.js && node --check public/admin.js && node --check public/setup.js && node --check public/auth-client.js",
     "db:local": "wrangler d1 migrations apply dra-lextalk-legal-db --local",
     "db:remote": "wrangler d1 migrations apply dra-lextalk-legal-db --remote",
     "db:status": "wrangler d1 migrations list dra-lextalk-legal-db --remote",

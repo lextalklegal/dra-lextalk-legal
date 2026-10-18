@@ -1,0 +1,33 @@
+name: Validate DRA Learning (no deployment)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches:
+      - "feat/**"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Run syntax and schema checks
+        run: |
+          npm run check
+          npm run validate

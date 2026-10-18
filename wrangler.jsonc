@@ -20,14 +20,13 @@
   "vars": {
     "APP_NAME": "DRA Learning by Lex Talk Legal",
     "PUBLIC_APP_URL": "https://dra.lextalk.legal",
-    "REQUIRE_VERIFIED_EMAIL": "false",
+    "REQUIRE_VERIFIED_EMAIL": "true",
     "EMAIL_FROM_NAME": "DRA Learning | Lex Talk Legal",
-    "COMMUNITY_WHATSAPP_URL": ""
+    "COMMUNITY_WHATSAPP_URL": "",
+    "SUPABASE_URL": "https://YOUR-PROJECT-REF.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY"
   },
   "observability": {
     "enabled": true
-  },
-  "limits": {
-    "cpu_ms": 1000
   }
 }

@@ -1,176 +1,107 @@
-# DRA Learning (dra.lextalk.legal) — Deployment Guide
+# DRA Learning (`dra.lextalk.legal`) — Managed Auth Go-Live Guide
 
-This is a starter application, not yet deployed to your Cloudflare account. The public pages and API are designed to run together as one Cloudflare Worker with static assets and a D1 database.
+**Important:** This is a proposed Free-plan-compatible redesign. Do not merge or deploy the feature branch until the PR review passes and the Supabase project settings are configured. The current production Worker is not changed by this guide.
 
-## Pehle kya ready rakhna hai
+## What changes with managed authentication?
 
-1. Cloudflare account with the `lextalk.legal` zone active.
-2. GitHub repository for this project.
-3. Node.js 20+ on your Windows computer.
-4. The D1 database ID that Cloudflare gives you.
-5. Admin name, email and a unique password (minimum 14 characters for first admin).
-6. Your original MCQs with verified answer keys and explanations. Begin with English/Hindi rows; add further reviewed translations using the same `question_key`.
-7. Before paid launch: Razorpay account, pricing decision, support email, refund/cancellation policy, privacy/terms review. Credentials are NOT needed for the free pilot.
+- Supabase Auth owns password verification, email confirmation, session issuance, and refresh.
+- The browser uses the Supabase JavaScript client. The DRA Worker receives the access token as a Bearer token and validates it with the project's Supabase Auth `/auth/v1/user` endpoint.
+- Cloudflare D1 remains the source of truth for DRA roles, test attempts, question bank, purchases, entitlements, classes and audit events. A new `auth_provider_user_id` maps the verified Supabase identity to the stable internal D1 user ID.
+- The Worker does not calculate PBKDF2 password hashes and no longer sets a custom CPU limit. It is designed for Cloudflare Workers Free, within current account/request/subrequest limits.
+- Never place a Supabase `service_role` or secret API key in browser code, Wrangler vars, GitHub secrets for this app, or a chat message. Only use the Supabase publishable key (or legacy anon public key) for this flow.
 
-## GitHub se automatic deployment (recommended)
+## 1. Create/configure the Supabase Auth project
 
-Project ko ek private GitHub repository mein push/upload karo (example: `dra-lextalk-legal`) aur branch ka naam `main` rakho. Repository → **Settings → Secrets and variables → Actions → New repository secret** mein ye 3 secrets add karo:
+1. Open [Supabase](https://supabase.com/dashboard/) and create/select a project on the Free plan.
+2. Under **Authentication → Sign In / Providers**, enable Email/password sign-in and keep email confirmation enabled.
+3. Under **Authentication → URL Configuration**, set **Site URL** to `https://dra.lextalk.legal`.
+4. Add `https://dra.lextalk.legal/**` to **Redirect URLs**. For local Wrangler testing, also add the exact localhost URL it prints (for example `http://localhost:8787/**`).
+5. Copy the project URL and the **publishable key** from Project Settings → API Keys. A legacy `anon` public key can also be used. Do not copy `service_role` or any key labelled secret.
+6. Email confirmations are needed for safe admin bootstrapping. Supabase's default email service can be restrictive/rate-limited; configure a verified custom SMTP sender before inviting the public. Test signup, confirmation, password login and password reset in Supabase before launch.
 
-- `CLOUDFLARE_API_TOKEN` — Cloudflare API token, Workers Scripts edit aur D1 edit permissions ke saath, sahi account ke liye.
-- `CLOUDFLARE_ACCOUNT_ID` — Cloudflare dashboard mein account ID.
-- `CLOUDFLARE_D1_DATABASE_ID` — isi app ke `dra-lextalk-legal-db` D1 database ka ID.
+Supabase JS reference: https://supabase.com/docs/reference/javascript/auth-signup and https://supabase.com/docs/reference/javascript/auth-signinwithpassword
+Redirect configuration: https://supabase.com/docs/guides/auth/redirect-urls
 
-Cloudflare dashboard mein pehle D1 database create karo:
+## 2. GitHub setup (deployment remains disabled until merge)
 
-```bash
-npx wrangler d1 create dra-lextalk-legal-db
-```
+Repository: `lextalklegal/dra-lextalk-legal`.
 
-Us command ka D1 ID GitHub secret mein save karo. **Database ID secret se deploy workflow `wrangler.jsonc` mein substitute hota hai; local tracked config mein apna ID commit karna zaroori nahi.** Uske baad source files `main` par push karo ya GitHub → Actions → `Validate and deploy DRA Learning` → Run workflow chalao. Workflow checks run karega, remote D1 migration apply karega aur Worker/assets deploy karega. First run se pehle database create hona aur teenon secrets ka sahi hona zaroori hai.
+1. Review the managed-auth pull request and its validation checks first. The separate validation workflow does not deploy the site.
+2. In repository **Settings → Secrets and variables → Actions**, add:
+   - `CLOUDFLARE_API_TOKEN` — scoped to this Cloudflare account with Workers Scripts Edit and D1 Edit.
+   - `CLOUDFLARE_ACCOUNT_ID` — account ID for the account managing `lextalk.legal`.
+   - `CLOUDFLARE_D1_DATABASE_ID` — ID for the existing `dra-lextalk-legal-db` database.
+   - `SUPABASE_URL` — HTTPS project URL from Supabase.
+   - `SUPABASE_PUBLISHABLE_KEY` — Supabase publishable key or legacy anon public key.
+3. Do not put any actual keys in checked-in files. At deploy time, the workflow writes the URL/public key into the temporary CI workspace only; it does not commit them. The publishable key is designed for public clients, but do not use `service_role` or a secret key.
+4. The existing `dra-lextalk-legal-db` should already exist. Do not create a duplicate if it is visible in Cloudflare. Migration `0002_managed_auth.sql` adds the provider identity mapping without replacing internal user IDs.
 
-Deployment ke baad Cloudflare dashboard → Workers & Pages → `dra-lextalk-legal` → Settings / Domains & Routes → Add Custom Domain mein `dra.lextalk.legal` add karo. Agar domain option available na ho, confirm karo ki `lextalk.legal` zone isi Cloudflare account mein active hai.
+The production deploy workflow only runs on pushes to `main` or when manually dispatched. Do not merge the feature PR or manually run the production workflow until reviewed and ready.
 
-## Password hashing aur Cloudflare plan
+## 3. Local testing on Windows (no paid Cloudflare upgrade required)
 
-Login/register mein PBKDF2-SHA256 ke 600,000 iterations use hote hain. Cloudflare Workers Free tier per request sirf 10 ms CPU allow karta hai; isliye is authentication implementation ko Free tier par deploy karke production login kaam karega assume mat karo. Safe launch ke liye Workers Paid plan (currently minimum US$5/month according to Cloudflare pricing; usage/fees may change) ya external managed authentication provider ke integration ki zaroorat hai. Billing plan change se pehle apne Cloudflare account mein current price aur taxes confirm karo.
-
-## Step 1 — Upload project to GitHub
-
-- Download/unzip the project.
-- Create or choose a private GitHub repository, for example `dra-lextalk-legal`.
-- Upload all files while keeping folder names: `src`, `public`, `migrations`, `sample-data`, `scripts`, `docs`.
-- Do not upload `.dev.vars`, any password, API key or payment secret.
-
-## Step 2 — Install local tools
-
-Install Node.js 20 or newer, then open PowerShell in the project folder and run:
+Install Node.js 20+; then open PowerShell in the project directory:
 
 ```powershell
 npm install
-npm run check
-npx wrangler login
+python scripts/configure_supabase.py "https://YOUR-PROJECT-REF.supabase.co" "YOUR_SUPABASE_PUBLISHABLE_OR_ANON_KEY"
+Copy-Item env.example .dev.vars
 ```
 
-`npm run check` runs JavaScript syntax checks. It does not deploy anything.
+Edit `.dev.vars` and set a long random `ADMIN_BOOTSTRAP_KEY`. Do not commit `.dev.vars`.
 
-## Step 3 — Create the D1 database
-
-```powershell
-npx wrangler d1 create dra-lextalk-legal-db
-```
-
-Cloudflare prints a database ID. Open `wrangler.jsonc` and replace `REPLACE_WITH_YOUR_D1_DATABASE_ID` with the exact ID. Save the file. Do not make another D1 database if you already created the one for this project; use its existing ID.
-
-## Step 4 — Apply database schema
-
-For a local development copy:
+Then run:
 
 ```powershell
 npm run db:local
+npm run check
+npm run validate
+npm run dev
 ```
 
-For the live Cloudflare database, when ready:
+Open the local URL printed by Wrangler. Register a learner, confirm the email using the inbox link, then sign in and test the free mock. The script `configure_supabase.py` writes only the project URL and publishable/anon key to local `wrangler.jsonc` and `public/auth-config.js`. These are public-client values; never use a service/secret key. To prepare a deployment build, rerun with your actual project URL/key. The GitHub workflow configures the values in its ephemeral runner on each deployment.
 
-```powershell
-npm run db:remote
-```
+## 4. Admin bootstrap
 
-The initial migration creates accounts, sessions, questions, translations, test configurations, test attempts, plans, payments, entitlements, classes and audit logs. It seeds one clearly labelled free demo test with five illustrative English/Hindi questions. They are NOT official IIBF questions. Import your own verified bank and mark each language translation as reviewed in Admin before test attempts can use it.
+1. Register a normal student account from the website and confirm its email.
+2. Set a long random Worker secret named `ADMIN_BOOTSTRAP_KEY`. For local test it is in `.dev.vars`; for production use the Cloudflare Worker secret configuration.
+3. Open `/setup.html`, sign in using that existing confirmed Supabase account, enter the one-time bootstrap key, and promote the account to the first administrator.
+4. Immediately delete the `ADMIN_BOOTSTRAP_KEY` secret. The backend also refuses to promote another account once an administrator already exists.
+5. Sign in at `/admin.html`. Student accounts remain blocked from `/api/admin/*` by server-side role checks; do not rely on the page UI for security.
 
-## Step 5 — Local development and first admin
+## 5. D1 migrations and free-test verification
 
-1. Copy `env.example` to `.dev.vars` in the project root.
-2. Replace `ADMIN_BOOTSTRAP_KEY` with a long random value. Never commit `.dev.vars`.
-3. Run `npm run dev`.
-4. Open the local URL Wrangler prints, then open `/setup.html`.
-5. Create the first administrator. Then sign in at `/admin.html`.
-6. `ADMIN_BOOTSTRAP_KEY` in `.dev.vars` is still active for local. Once you deploy production, delete the production secret after creating the first admin. Do not put the key in GitHub.
+The deployment workflow applies remote D1 migrations before the Worker deploy. The new migration adds `auth_provider_user_id` with a unique index. A verified Supabase identity is linked to an existing D1 profile only when its email is confirmed; otherwise the backend provisions a separate profile. Internal D1 IDs remain stable so attempts, purchases and entitlements are not orphaned.
 
-## Step 6 — Deploy to Cloudflare
+Before public launch:
 
-Once the D1 ID and migration are correct:
+- Replace all illustrative questions with your verified MCQ bank. They are not official IIBF questions.
+- Review and publish each translation in Admin. Unreviewed translations must not be offered in a test.
+- Configure the free test format (for example 100 questions/120 minutes) only after enough complete/reviewed questions exist for that language.
+- Confirm the free mock is allowed only once per registered account and that a second attempt is blocked server-side.
+- Verify an unconfirmed email cannot start a mock (the Worker default is `REQUIRE_VERIFIED_EMAIL=true`).
+- Verify admin APIs deny a normal student even if they manually call the endpoint.
+- Ensure answer keys are not returned until submission.
 
-```powershell
-npx wrangler deploy
-```
+## 6. Payments and live classes (still separate from auth)
 
-The initial deployment will use the Worker name `dra-lextalk-legal`. Test the `workers.dev` preview URL first. Then in Cloudflare Dashboard open **Workers & Pages → dra-lextalk-legal → Settings / Domains & Routes → Add Custom Domain**, choose `dra.lextalk.legal`, and complete the prompts. The `lextalk.legal` zone must be managed/active in the same Cloudflare account.
+Razorpay remains disabled until you add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` and `RAZORPAY_WEBHOOK_SECRET`, test the checkout/webhook flow, finalise pricing/support/refund policies and explicitly activate plans. Test successful, failed, cancelled and delayed-capture outcomes. The app schedules classes and links to a meeting URL that you provide (Google Meet/Zoom/etc.); it does not host video.
 
-## Step 7 — Create the live administrator
+## 7. Free-plan constraints and important cautions
 
-Set the one-time secret on the deployed Worker:
+- Supabase currently lists 50,000 monthly active users on the Free plan. Review current usage, project-pausing, backup and email delivery limits before launch: https://supabase.com/docs/guides/platform/manage-your-usage/monthly-active-users and https://supabase.com/docs/guides/platform/billing-on-supabase
+- The DRA Worker performs one Supabase Auth validation call per incoming API request that needs an identity. Monitor Worker request/subrequest usage, latency, Supabase Auth rate limits and failures.
+- The current browser SDK persists its managed session in browser storage. Keep the SDK version pinned, avoid unsafe HTML rendering, maintain a strict Content Security Policy, and do not place tokens in URLs/logs. A future BFF/HttpOnly-cookie design can reduce JS token exposure but is a separate project.
+- Password-reset UI, SMS OTP, WhatsApp API automation and automated backups are not implemented in the starter. Use Supabase's own email/password-reset functionality where available and add a complete user-facing reset flow before launch.
+- Home and policy pages remain `noindex,nofollow` while demo questions/policy templates are present. Finalise privacy, terms, support/grievance contacts, data retention/deletion and business disclosures before opening indexing or accepting payments.
 
-```powershell
-npx wrangler secret put ADMIN_BOOTSTRAP_KEY
-```
+## 8. Test checklist
 
-Paste a long random secret when prompted. Open `https://dra.lextalk.legal/setup.html`, create the first admin, then immediately remove the secret:
-
-```powershell
-npx wrangler secret delete ADMIN_BOOTSTRAP_KEY
-```
-
-If an administrator already exists, the bootstrap API rejects further admin creation. Do not leave the bootstrap key configured longer than needed.
-
-## Step 8 — Upload MCQs
-
-- Open `/admin.html` and sign in.
-- Use the downloadable template `sample-data/mcq-import-template.csv` or the example `sample-data/mcq-two-language-example.csv`.
-- One CSV row = one language version of a question. Use the same `question_key` for translations of the same question (e.g. `DRA-0001` in English and Hindi).
-- The correct option letter (A/B/C/D) MUST be the same across all translations of that question; only option text is translated.
-- Every row must have question text, all four option texts and the correct option.
-- Import batches of at most 300 rows are supported. Imported questions are Draft. Review them and publish from the Question Bank table.
-- The platform does not auto-publish machine-translated content. Review legal terms and subject accuracy in each language.
-- The Free Starter Mock is configured for 5 questions and 10 minutes for initial smoke testing. It can start only in a language that has at least five complete, published and explicitly reviewed questions. Before public launch, replace the illustrative demo bank with your verified MCQs and set the free mock to the intended full test format (for example, 100 questions / 120 minutes) after confirming sufficient reviewed questions exist.
-- A premium mock is seeded as Draft for 100 questions / 120 minutes. Publish only after there are enough reviewed questions in at least one language; students still require an active paid entitlement.
-
-## Step 9 — Configure paid plans (do after free flow is tested)
-
-Do not activate paid plans until pricing, refund/support policies and gateway settings are ready. First use Razorpay **Test Mode**. Set secrets:
-
-```powershell
-npx wrangler secret put RAZORPAY_KEY_ID
-npx wrangler secret put RAZORPAY_KEY_SECRET
-npx wrangler secret put RAZORPAY_WEBHOOK_SECRET
-```
-
-Configure a Razorpay webhook pointed to `https://dra.lextalk.legal/api/payments/webhook` for the `payment.captured` event and use the exact webhook secret in the Worker. Enter test-mode prices in Admin → Paid membership packages, save plans as active only after verifying the checkout flow. The server checks the checkout signature and the gateway-side payment record before granting an entitlement. Test successful, failed, cancelled and delayed-capture payments before going live.
-
-## Step 10 — Optional email verification and WhatsApp
-
-Email code delivery is optional. If you later want it, configure a verified sender and set secrets for `RESEND_API_KEY`, `EMAIL_FROM`, and a separate random `AUTH_PEPPER`. Turn `REQUIRE_VERIFIED_EMAIL` to `true` only after testing email delivery. If no email provider is configured, students can still register because the default is `false`.
-
-To show the DRA Community India WhatsApp button, put the real invite URL in `COMMUNITY_WHATSAPP_URL` in `wrangler.jsonc` and deploy again. Do not use a placeholder or expose a private group link without the group's consent.
-
-## Search indexing and safe beta
-
-Homepage and Terms/Privacy pages are set to `noindex,nofollow` because the seeded MCQs are illustrative and policy pages contain placeholders. Keep this setting during private smoke testing. Remove it only after replacing sample questions with verified content, finalising policies/support contacts, and completing a production review. `robots.txt` disallows admin/setup/API crawling, but robots rules are not access controls; admin APIs are protected by authentication and role checks.
-
-## Current implementation scope / limitations
-
-- Included: responsive public website, register/login/logout, salted PBKDF2 password hashes, HttpOnly session cookies, single-use free mock per registered account, timed attempts, answer saving, server-side grading, result explanations, language-specific question/option tables, CSV import, admin publication checks, test and plan settings, class schedule/join links, audit logs, Razorpay order/signature/payment-state foundations, official IIBF link, policy drafts.
-- Not yet deployed to your Cloudflare account. The GitHub workflow is configured, but repository creation/upload, Cloudflare deployment secrets, D1 creation, custom-domain binding, one-time admin bootstrap, and production smoke tests still require account access/actions.
-- Payment remains unavailable until secrets and active plans are configured. The current plan records are Draft; no user can be charged by default.
-- Live classes use a meeting link from the provider you choose (Google Meet/Zoom/etc.); the platform does not provide video hosting.
-- No automatic AI translation is activated. Upload and review translation rows yourself; the source stores 11 language codes so languages can be added as verified translations are prepared.
-- Password-reset flow, SMS OTP, WhatsApp API automation, confirmed email delivery and automated backups are not yet implemented.
-- For public production use, configure Cloudflare rate limiting/WAF for `/api/auth/login`, `/api/auth/register`, `/api/admin/bootstrap`, payment routes; review data protection terms, contact/grievance details, backups, monitoring and account recovery.
-
-## Test checklist before launch
-
-- Register a learner and log out/in.
-- Start the free mock in English and Hindi; complete it; verify the score and answers.
-- Confirm the same learner cannot start the free mock a second time.
-- Try an unpopulated language and confirm the interface reports missing reviewed translations without crashing.
-- Import sample CSV, publish after review and confirm a published test only shows available reviewed language versions.
-- Try admin endpoints as a student and verify access is denied.
-- Verify that answer keys are not sent before test submission.
-- Keep paid plans Draft until the Razorpay test-mode flow and refund/support process have been reviewed.
-
-## Official references
-
-- Cloudflare Wrangler configuration: https://developers.cloudflare.com/workers/wrangler/configuration/
-- Cloudflare static assets: https://developers.cloudflare.com/workers/static-assets/
-- D1 migrations: https://developers.cloudflare.com/d1/reference/migrations/
-- Cloudflare Worker secrets: https://developers.cloudflare.com/workers/configuration/secrets/
-- IIBF DRA certificate exam page: https://www.iibf.org.in/certificate-examination-for-DRA
+- Register with a new email and confirm the email link returns to `dra.lextalk.legal` (or localhost during development).
+- Sign in/out, refresh the page, and verify the managed session renews.
+- Confirm `/api/auth/me` returns the expected D1 profile, while no bearer token returns `user: null`.
+- Promote the first confirmed user to admin, delete the bootstrap secret, and verify another bootstrap attempt fails.
+- Try admin endpoints with a student account and verify `403 ADMIN_REQUIRED`.
+- Complete the free mock, validate score/explanations, then confirm the second free attempt is blocked.
+- Test unreviewed/missing translations, language switching and a missing provider config.
+- Keep paid plans Draft until payment and business policies have been reviewed.

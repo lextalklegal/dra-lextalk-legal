@@ -12,10 +12,7 @@ const LANGUAGES = [
   { code: 'as', name: 'Assamese', examMedium: true }
 ];
 const DEFAULT_LANGUAGES = new Set(LANGUAGES.map(x => x.code));
-const SESSION_COOKIE = 'dra_session';
-const SESSION_SECONDS = 60 * 60 * 24 * 7;
-const PASSWORD_ITERATIONS = 600000;
-const EMAIL_CODE_SECONDS = 15 * 60;
+const authCache = new WeakMap();
 
 function json(data, status = 200, extraHeaders = {}) {
   return new Response(JSON.stringify(data), {
@@ -35,47 +32,12 @@ function error(message, status = 400, code = 'BAD_REQUEST', extra = {}) {
 function nowIso() { return new Date().toISOString(); }
 function addMinutes(date, minutes) { return new Date(date.getTime() + minutes * 60000).toISOString(); }
 function addDays(date, days) { return new Date(date.getTime() + days * 86400000).toISOString(); }
-function randomHex(bytes = 32) {
-  const data = crypto.getRandomValues(new Uint8Array(bytes));
-  return Array.from(data, b => b.toString(16).padStart(2, '0')).join('');
-}
 function bytesToHex(bytes) { return Array.from(new Uint8Array(bytes), b => b.toString(16).padStart(2, '0')).join(''); }
-function bytesToBase64Url(bytes) {
-  let raw = '';
-  for (const byte of bytes) raw += String.fromCharCode(byte);
-  return btoa(raw).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
-}
-function base64UrlToBytes(value) {
-  const padded = value.replaceAll('-', '+').replaceAll('_', '/') + '='.repeat((4 - value.length % 4) % 4);
-  const raw = atob(padded);
-  return Uint8Array.from(raw, c => c.charCodeAt(0));
-}
-async function sha256Hex(value) {
-  return bytesToHex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value)));
-}
-async function passwordHash(password, salt) {
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt: base64UrlToBytes(salt), iterations: PASSWORD_ITERATIONS, hash: 'SHA-256' }, key, 256);
-  return bytesToHex(bits);
-}
 function equalConstantTime(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
   let diff = 0;
   for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return diff === 0;
-}
-function cookieValue(request, key) {
-  const cookie = request.headers.get('cookie') || '';
-  for (const part of cookie.split(';')) {
-    const index = part.indexOf('=');
-    if (index < 0) continue;
-    if (part.slice(0, index).trim() === key) return part.slice(index + 1).trim();
-  }
-  return null;
-}
-function sessionCookie(request, token, maxAge = SESSION_SECONDS) {
-  const secure = new URL(request.url).protocol === 'https:' ? '; Secure' : '';
-  return `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}${secure}`;
 }
 function assertSameOrigin(request) {
   const origin = request.headers.get('origin');
@@ -90,21 +52,78 @@ async function readJson(request, maxBytes = 1_500_000) {
   if (text.length > maxBytes) throw new Error('Request body is too large.');
   return JSON.parse(text || '{}');
 }
-async function getUser(request, env) {
-  const token = cookieValue(request, SESSION_COOKIE);
-  if (!token || !env.DB) return null;
-  const tokenHash = await sha256Hex(token);
+async function loadUserFromManagedAuth(request, env) {
+  const authorization = request.headers.get('authorization') || '';
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  const token = match?.[1]?.trim();
+  const supabaseUrl = String(env.SUPABASE_URL || '').trim().replace(/\/+$/, '');
+  const publishableKey = String(env.SUPABASE_PUBLISHABLE_KEY || '').trim();
+  if (!token || !supabaseUrl || !publishableKey || !env.DB) return null;
+  let parsedUrl;
+  try { parsedUrl = new URL(supabaseUrl); } catch { return null; }
+  if (parsedUrl.protocol !== 'https:') return null;
+
+  let response;
+  try {
+    response = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: { apikey: publishableKey, authorization: `Bearer ${token}`, accept: 'application/json' },
+      signal: AbortSignal.timeout(6000)
+    });
+  } catch { return null; }
+  if (!response.ok) return null;
+  let identity;
+  try { identity = await response.json(); } catch { return null; }
+  if (!identity || typeof identity.id !== 'string' || !isEmail(identity.email)) return null;
+
+  const providerId = identity.id;
+  const email = identity.email.trim().toLowerCase();
+  const metadata = identity.user_metadata && typeof identity.user_metadata === 'object' ? identity.user_metadata : {};
+  const fullName = normalizeText(metadata.full_name || metadata.name || email.split('@')[0], 120) || email;
+  const phone = normalizeText(identity.phone || metadata.phone || '', 25) || null;
+  const emailVerified = identity.email_confirmed_at ? 1 : 0;
   const now = nowIso();
-  const row = await env.DB.prepare(`
-    SELECT u.id, u.full_name, u.email, u.phone, u.role, u.email_verified, u.status, u.created_at
-    FROM sessions s JOIN users u ON u.id = s.user_id
-    WHERE s.token_hash = ? AND s.expires_at > ? AND u.status = 'active'
-    LIMIT 1`).bind(tokenHash, now).first();
-  return row || null;
+
+  let profile = await env.DB.prepare(`SELECT id,full_name,email,phone,role,email_verified,status,created_at FROM users WHERE auth_provider_user_id=? LIMIT 1`).bind(providerId).first();
+  if (!profile) {
+    const sameEmail = await env.DB.prepare(`SELECT id,auth_provider_user_id,status FROM users WHERE email=? COLLATE NOCASE LIMIT 1`).bind(email).first();
+    if (sameEmail) {
+      // Link an existing legacy profile only when the managed provider confirms ownership of this email.
+      if (sameEmail.auth_provider_user_id || !emailVerified || sameEmail.status !== 'active') return null;
+      const linked = await env.DB.prepare(`UPDATE users SET auth_provider_user_id=?,full_name=?,phone=?,email_verified=1,updated_at=? WHERE id=? AND auth_provider_user_id IS NULL`)
+        .bind(providerId, fullName, phone, now, sameEmail.id).run();
+      if (!Number(linked.meta?.changes || 0)) return null;
+      profile = await env.DB.prepare(`SELECT id,full_name,email,phone,role,email_verified,status,created_at FROM users WHERE id=? LIMIT 1`).bind(sameEmail.id).first();
+    } else {
+      const localId = crypto.randomUUID();
+      try {
+        await env.DB.prepare(`INSERT INTO users (id,full_name,email,phone,password_hash,password_salt,auth_provider_user_id,role,email_verified,status,created_at,updated_at)
+          VALUES (?,?,?,?, 'managed-by-supabase','managed-by-supabase',?,'student',?,'active',?,?)`)
+          .bind(localId, fullName, email, phone, providerId, emailVerified, now, now).run();
+      } catch { return null; }
+      profile = await env.DB.prepare(`SELECT id,full_name,email,phone,role,email_verified,status,created_at FROM users WHERE id=? LIMIT 1`).bind(localId).first();
+      if (profile) await writeAudit(env, profile, 'user.provisioned_by_managed_auth', 'user', profile.id);
+    }
+  } else {
+    if (profile.status !== 'active') return null;
+    try {
+      await env.DB.prepare(`UPDATE users SET full_name=?,email=?,phone=?,email_verified=?,updated_at=? WHERE id=?`)
+        .bind(fullName, email, phone, emailVerified, now, profile.id).run();
+      profile = await env.DB.prepare(`SELECT id,full_name,email,phone,role,email_verified,status,created_at FROM users WHERE id=? LIMIT 1`).bind(profile.id).first();
+    } catch { return null; }
+  }
+  if (!profile || profile.status !== 'active') return null;
+  return { ...profile, email_verified: profile.email_verified === 1 || profile.email_verified === true };
+}
+async function getUser(request, env) {
+  if (authCache.has(request)) return authCache.get(request);
+  const pending = loadUserFromManagedAuth(request, env).catch(() => null);
+  authCache.set(request, pending);
+  return pending;
 }
 async function requireUser(request, env) {
   const user = await getUser(request, env);
-  if (!user) return { response: error('Please log in to continue.', 401, 'AUTH_REQUIRED') };
+  if (!user) return { response: error('Please sign in and confirm your email to continue.', 401, 'AUTH_REQUIRED') };
   return { user };
 }
 async function requireAdmin(request, env) {
@@ -113,54 +132,11 @@ async function requireAdmin(request, env) {
   if (result.user.role !== 'admin') return { response: error('Administrator access is required.', 403, 'ADMIN_REQUIRED') };
   return result;
 }
-async function createSession(request, env, userId) {
-  const token = randomHex(32);
-  const tokenHash = await sha256Hex(token);
-  const createdAt = nowIso();
-  const expiresAt = new Date(Date.now() + SESSION_SECONDS * 1000).toISOString();
-  await env.DB.prepare('INSERT INTO sessions (token_hash, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)')
-    .bind(tokenHash, userId, expiresAt, createdAt).run();
-  return sessionCookie(request, token);
-}
 async function writeAudit(env, actor, action, entityType, entityId, metadata = null) {
   try {
     await env.DB.prepare(`INSERT INTO audit_logs (id, actor_user_id, action, entity_type, entity_id, metadata_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)`)
       .bind(crypto.randomUUID(), actor?.id || null, action, entityType || null, entityId || null, metadata ? JSON.stringify(metadata) : null, nowIso()).run();
   } catch (e) { /* Audit log failure must not expose internals to the user; alerting is configured separately. */ }
-}
-async function sendVerificationEmail(env, user, code) {
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return { sent: false, reason: 'email_not_configured' };
-  const fromName = env.EMAIL_FROM_NAME || 'DRA Learning | Lex Talk Legal';
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify({
-      from: `${fromName} <${env.EMAIL_FROM}>`,
-      to: [user.email],
-      subject: 'Verify your DRA Learning account',
-      html: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:auto"><h2>DRA Learning | Lex Talk Legal</h2><p>Hello ${String(user.full_name).replace(/[&<>"']/g, '')},</p><p>Your email verification code is:</p><p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p><p>This code expires in 15 minutes. Do not share it with anyone.</p></div>`
-    })
-  });
-  if (!response.ok) return { sent: false, reason: 'email_provider_error' };
-  return { sent: true };
-}
-async function issueVerificationCode(env, user) {
-  if (!env.RESEND_API_KEY || !env.EMAIL_FROM) return { sent: false, reason: 'email_not_configured' };
-  const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, '0');
-  const codeHash = await sha256Hex(`${user.email.toLowerCase()}:${code}:${env.AUTH_PEPPER || ''}`);
-  const createdAt = nowIso();
-  const expiresAt = addMinutes(new Date(), EMAIL_CODE_SECONDS / 60);
-  await env.DB.prepare(`INSERT INTO email_verification_codes (email, user_id, code_hash, expires_at, attempts, created_at)
-    VALUES (?, ?, ?, ?, 0, ?) ON CONFLICT(email) DO UPDATE SET user_id=excluded.user_id, code_hash=excluded.code_hash, expires_at=excluded.expires_at, attempts=0, created_at=excluded.created_at`)
-    .bind(user.email.toLowerCase(), user.id, codeHash, expiresAt, createdAt).run();
-  const result = await sendVerificationEmail(env, user, code);
-  if (!result.sent) return { sent: false, reason: result.reason };
-  return { sent: true };
-}
-async function logInResponse(request, env, user) {
-  const setCookie = await createSession(request, env, user.id);
-  const safeUser = { id: user.id, full_name: user.full_name, email: user.email, phone: user.phone, role: user.role, email_verified: user.email_verified === 1 || user.email_verified === true, status: user.status };
-  return json({ user: safeUser }, 200, { 'set-cookie': setCookie });
 }
 function isEmail(value) { return typeof value === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value) && value.length <= 254; }
 function validateLanguage(value) { return DEFAULT_LANGUAGES.has(String(value || '')) ? String(value) : null; }
@@ -187,94 +163,10 @@ async function razorpaySignature(secret, message) {
 async function handleAuth(request, env, path, method) {
   if (path === '/api/auth/me' && method === 'GET') {
     const user = await getUser(request, env);
-    if (!user) return json({ user: null });
-    return json({ user: { ...user, email_verified: user.email_verified === 1 || user.email_verified === true } });
+    return json({ user: user || null, auth_configured: Boolean(env.SUPABASE_URL && env.SUPABASE_PUBLISHABLE_KEY) });
   }
-  if (path === '/api/auth/register' && method === 'POST') {
-    let body;
-    try { body = await readJson(request, 12_000); } catch { return error('Please submit a valid registration form.', 400, 'INVALID_JSON'); }
-    const fullName = normalizeText(body.full_name, 120);
-    const email = normalizeText(body.email, 254).toLowerCase();
-    const phone = normalizeText(body.phone, 25) || null;
-    const password = typeof body.password === 'string' ? body.password : '';
-    if (fullName.length < 2) return error('Enter your full name.', 422, 'VALIDATION_ERROR');
-    if (!isEmail(email)) return error('Enter a valid email address.', 422, 'VALIDATION_ERROR');
-    if (password.length < 10 || password.length > 128) return error('Password must be 10–128 characters long.', 422, 'VALIDATION_ERROR');
-    const existing = await env.DB.prepare('SELECT id FROM users WHERE email = ? COLLATE NOCASE').bind(email).first();
-    if (existing) return error('An account with this email already exists. Please log in.', 409, 'EMAIL_EXISTS');
-    const salt = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)));
-    const hash = await passwordHash(password, salt);
-    const user = { id: crypto.randomUUID(), full_name: fullName, email, phone, role: 'student', email_verified: 0, status: 'active' };
-    const now = nowIso();
-    await env.DB.prepare(`INSERT INTO users (id, full_name, email, phone, password_hash, password_salt, role, email_verified, status, created_at, updated_at)
-      VALUES (?, ?, ?, ?, ?, ?, 'student', 0, 'active', ?, ?)`)
-      .bind(user.id, fullName, email, phone, hash, salt, now, now).run();
-    const verification = await issueVerificationCode(env, user);
-    const cookie = await createSession(request, env, user.id);
-    await writeAudit(env, user, 'user.registered', 'user', user.id);
-    return json({ user: { id: user.id, full_name: fullName, email, phone, role: 'student', email_verified: false, status: 'active' }, verification }, 201, { 'set-cookie': cookie });
-  }
-  if (path === '/api/auth/login' && method === 'POST') {
-    let body;
-    try { body = await readJson(request, 12_000); } catch { return error('Please submit a valid login form.', 400, 'INVALID_JSON'); }
-    const email = normalizeText(body.email, 254).toLowerCase();
-    const password = typeof body.password === 'string' ? body.password : '';
-    if (!isEmail(email) || !password) return error('Enter your email and password.', 422, 'VALIDATION_ERROR');
-    const now = nowIso();
-    const clientIp = request.headers.get('cf-connecting-ip') || 'local-development';
-    const attemptKey = await sha256Hex(`${email}|${clientIp}`);
-    const limit = await env.DB.prepare('SELECT failure_count, window_started_at, locked_until FROM auth_login_limits WHERE attempt_key = ?').bind(attemptKey).first();
-    if (limit?.locked_until && limit.locked_until > now) return error('Too many unsuccessful attempts. Please wait 15 minutes and try again.', 429, 'LOGIN_TEMPORARILY_LOCKED');
-    const user = await env.DB.prepare('SELECT * FROM users WHERE email = ? COLLATE NOCASE LIMIT 1').bind(email).first();
-    const hash = user ? await passwordHash(password, user.password_salt) : null;
-    if (!user || user.status !== 'active' || !equalConstantTime(hash, user.password_hash)) {
-      const cutoff = addMinutes(new Date(), -15);
-      const withinWindow = limit && limit.window_started_at > cutoff.toISOString();
-      const failures = withinWindow ? Number(limit.failure_count || 0) + 1 : 1;
-      const windowStart = withinWindow ? limit.window_started_at : now;
-      const lockedUntil = failures >= 10 ? addMinutes(new Date(), 15) : null;
-      await env.DB.prepare(`INSERT INTO auth_login_limits (attempt_key,failure_count,window_started_at,locked_until,updated_at) VALUES (?,?,?,?,?)
-        ON CONFLICT(attempt_key) DO UPDATE SET failure_count=excluded.failure_count, window_started_at=excluded.window_started_at, locked_until=excluded.locked_until, updated_at=excluded.updated_at`)
-        .bind(attemptKey, failures, windowStart, lockedUntil, now).run();
-      if (lockedUntil) return error('Too many unsuccessful attempts. Please wait 15 minutes and try again.', 429, 'LOGIN_TEMPORARILY_LOCKED');
-      return error('Invalid email or password.', 401, 'INVALID_CREDENTIALS');
-    }
-    await env.DB.prepare('DELETE FROM auth_login_limits WHERE attempt_key = ?').bind(attemptKey).run();
-    return logInResponse(request, env, user);
-  }
-  if (path === '/api/auth/logout' && method === 'POST') {
-    const token = cookieValue(request, SESSION_COOKIE);
-    if (token) await env.DB.prepare('DELETE FROM sessions WHERE token_hash = ?').bind(await sha256Hex(token)).run();
-    return json({ ok: true }, 200, { 'set-cookie': sessionCookie(request, '', 0) });
-  }
-  if (path === '/api/auth/request-verification' && method === 'POST') {
-    const result = await requireUser(request, env);
-    if (result.response) return result.response;
-    if (result.user.email_verified) return json({ ok: true, already_verified: true });
-    const verification = await issueVerificationCode(env, result.user);
-    if (!verification.sent) return error('Email verification delivery is not configured yet. The administrator must configure the verified sender and email provider.', 503, 'EMAIL_DELIVERY_NOT_CONFIGURED');
-    return json({ ok: true, message: 'A verification code has been sent to your email.' });
-  }
-  if (path === '/api/auth/verify-email' && method === 'POST') {
-    const result = await requireUser(request, env);
-    if (result.response) return result.response;
-    let body;
-    try { body = await readJson(request, 5000); } catch { return error('Enter the verification code.', 400, 'INVALID_JSON'); }
-    const code = normalizeText(body.code, 10);
-    if (!/^\d{6}$/.test(code)) return error('The verification code must contain six digits.', 422, 'VALIDATION_ERROR');
-    const row = await env.DB.prepare('SELECT * FROM email_verification_codes WHERE email = ? COLLATE NOCASE').bind(result.user.email).first();
-    if (!row || row.expires_at <= nowIso() || row.attempts >= 5) return error('The code has expired or the maximum attempts were reached. Request a new code.', 422, 'CODE_EXPIRED');
-    const hash = await sha256Hex(`${result.user.email.toLowerCase()}:${code}:${env.AUTH_PEPPER || ''}`);
-    if (!equalConstantTime(hash, row.code_hash)) {
-      await env.DB.prepare('UPDATE email_verification_codes SET attempts = attempts + 1 WHERE email = ? COLLATE NOCASE').bind(result.user.email).run();
-      return error('Incorrect verification code.', 422, 'INVALID_CODE');
-    }
-    await env.DB.batch([
-      env.DB.prepare('UPDATE users SET email_verified = 1, updated_at = ? WHERE id = ?').bind(nowIso(), result.user.id),
-      env.DB.prepare('DELETE FROM email_verification_codes WHERE email = ? COLLATE NOCASE').bind(result.user.email)
-    ]);
-    await writeAudit(env, result.user, 'user.email_verified', 'user', result.user.id);
-    return json({ ok: true, message: 'Email verified successfully.' });
+  if (['/api/auth/register','/api/auth/login','/api/auth/logout','/api/auth/request-verification','/api/auth/verify-email'].includes(path)) {
+    return error('Authentication is managed by the configured identity provider. Use the sign-in form on this site.', 410, 'MANAGED_AUTH_REQUIRED');
   }
   return null;
 }
@@ -450,27 +342,26 @@ async function getAttemptResponse(env, user, attemptId) {
 
 async function handleAdmin(request, env, path, method, user) {
   if (path === '/api/admin/bootstrap' && method === 'POST') {
+    if (!user) return error('Sign in with an email-confirmed managed-auth account first.', 401, 'AUTH_REQUIRED');
+    if (!user.email_verified) return error('Confirm this account email before creating the first administrator.', 403, 'EMAIL_CONFIRMATION_REQUIRED');
     if (!env.ADMIN_BOOTSTRAP_KEY) return error('ADMIN_BOOTSTRAP_KEY has not been configured as a Worker secret.', 503, 'BOOTSTRAP_NOT_CONFIGURED');
     const supplied = request.headers.get('x-bootstrap-key') || '';
     if (!equalConstantTime(supplied, env.ADMIN_BOOTSTRAP_KEY)) return error('Invalid bootstrap key.', 403, 'INVALID_BOOTSTRAP_KEY');
-    const count = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users WHERE role='admin'`).first();
-    if (Number(count?.n || 0) > 0) return error('An administrator already exists. Bootstrap is disabled.', 409, 'ADMIN_ALREADY_EXISTS');
     let body;
-    try { body = await readJson(request, 12_000); } catch { return error('Invalid bootstrap request.', 400, 'INVALID_JSON'); }
-    const fullName = normalizeText(body.full_name, 120);
-    const email = normalizeText(body.email, 254).toLowerCase();
-    const password = typeof body.password === 'string' ? body.password : '';
-    if (fullName.length < 2 || !isEmail(email) || password.length < 14 || password.length > 128) return error('Provide a name, valid email and a password of at least 14 characters.', 422, 'VALIDATION_ERROR');
-    const salt = bytesToBase64Url(crypto.getRandomValues(new Uint8Array(16)));
-    const hash = await passwordHash(password, salt);
+    try { body = await readJson(request, 5000); } catch { return error('Invalid bootstrap request.', 400, 'INVALID_JSON'); }
+    const fullName = normalizeText(body.full_name, 120) || user.full_name;
+    if (fullName.length < 2) return error('Provide a valid administrator name.', 422, 'VALIDATION_ERROR');
+    // A single conditional statement makes first-admin promotion safe against simultaneous requests.
     const now = nowIso();
-    const id = crypto.randomUUID();
-    try {
-      await env.DB.prepare(`INSERT INTO users (id,full_name,email,phone,password_hash,password_salt,role,email_verified,status,created_at,updated_at)
-        VALUES (?,?,?,NULL,?,?,'admin',1,'active',?,?)`).bind(id, fullName, email, hash, salt, now, now).run();
-    } catch { return error('Could not create the admin. Verify that this email is not already registered.', 409, 'ADMIN_CREATE_FAILED'); }
-    await writeAudit(env, { id }, 'admin.bootstrapped', 'user', id);
-    return json({ ok: true, message: 'Admin created. The one-time bootstrap endpoint will now refuse further admin creation. Remove ADMIN_BOOTSTRAP_KEY after setup.' }, 201);
+    const promoted = await env.DB.prepare(`UPDATE users SET role='admin',full_name=?,updated_at=? WHERE id=? AND status='active' AND NOT EXISTS (SELECT 1 FROM users WHERE role='admin')`)
+      .bind(fullName, now, user.id).run();
+    if (!Number(promoted.meta?.changes || 0)) {
+      const count = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users WHERE role='admin'`).first();
+      if (Number(count?.n || 0) > 0) return error('An administrator already exists. Bootstrap is disabled.', 409, 'ADMIN_ALREADY_EXISTS');
+      return error('The signed-in account could not be promoted. Confirm its email and retry.', 409, 'ADMIN_CREATE_FAILED');
+    }
+    await writeAudit(env, user, 'admin.bootstrapped', 'user', user.id);
+    return json({ ok: true, message: 'Administrator role granted. Immediately delete ADMIN_BOOTSTRAP_KEY from Worker secrets and sign in at /admin.html.' }, 201);
   }
   if (!path.startsWith('/api/admin/')) return null;
   const auth = await requireAdmin(request, env);
@@ -811,8 +702,8 @@ export default {
       headers.set('referrer-policy', 'strict-origin-when-cross-origin');
       headers.set('permissions-policy', 'camera=(), microphone=(), geolocation=()');
       headers.set('x-frame-options', 'DENY');
-      headers.set('content-security-policy', "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://api.razorpay.com https://*.razorpay.com; frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://*.razorpay.com");
-      if (url.pathname.endsWith('.html') || url.pathname === '/') headers.set('cache-control', 'no-cache');
+      headers.set('content-security-policy', "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.razorpay.com https://*.razorpay.com; frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://*.razorpay.com");
+      if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '/auth-config.js') headers.set('cache-control', 'no-store, max-age=0');
       return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
     }
     if (!env.DB) return error('Database binding is not configured.', 503, 'DATABASE_NOT_CONFIGURED');

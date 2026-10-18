@@ -34,7 +34,7 @@ def main() -> int:
     except Exception as exc:
         failures.append(f'wrangler.jsonc is not valid JSONC-without-comments: {exc}')
 
-    for file in ('src/index.js', 'public/app.js', 'public/admin.js', 'public/setup.js'):
+    for file in ('src/index.js', 'public/app.js', 'public/admin.js', 'public/setup.js', 'public/auth-client.js'):
         result = subprocess.run(['node', '--check', str(ROOT / file)], capture_output=True, text=True)
         if result.returncode:
             failures.append(f'JavaScript syntax failed for {file}: {result.stderr.strip()}')
@@ -44,11 +44,13 @@ def main() -> int:
         db = sqlite3.connect(':memory:')
         db.execute('PRAGMA foreign_keys=ON')
         db.executescript((ROOT / 'migrations/0001_initial_schema.sql').read_text(encoding='utf-8'))
+        db.executescript((ROOT / 'migrations/0002_managed_auth.sql').read_text(encoding='utf-8'))
         tables = db.execute("SELECT COUNT(*) FROM sqlite_master WHERE type='table'").fetchone()[0]
         if tables < 15: failures.append(f'Expected schema tables, found {tables}')
         tests = {row[0]: row[1:] for row in db.execute('SELECT slug, question_count, status, is_free FROM test_configs')}
         if tests.get('free-mock') != (5, 'published', 1): failures.append('Free mock seed configuration is missing or unexpected')
-        if not config.get('limits', {}).get('cpu_ms', 0) >= 1000: failures.append('Worker cpu_ms should be set to at least 1000 for password hashing; Workers Paid plan is needed.')
+        if config.get('limits', {}).get('cpu_ms') is not None: failures.append('Free-plan Worker config must not set a custom cpu_ms limit; authentication is delegated to managed auth.')
+        if not config.get('vars', {}).get('SUPABASE_URL', '').startswith('https://'): failures.append('Supabase URL placeholder/runtime variable is missing.')
         if tests.get('premium-mock', (None, None, None))[1] != 'draft': failures.append('Premium mock should remain Draft by default')
         for lang in ('en', 'hi'):
             n = db.execute('''SELECT COUNT(*) FROM (
@@ -72,9 +74,12 @@ def main() -> int:
         if not target.is_file(): failures.append(f'Missing local asset referenced by HTML: {ref}')
     workflow = ROOT / '.github/workflows/deploy.yml'
     workflow_text = workflow.read_text(encoding='utf-8') if workflow.exists() else ''
-    for secret in ('CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_D1_DATABASE_ID'):
+    for secret in ('CLOUDFLARE_API_TOKEN', 'CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_D1_DATABASE_ID', 'SUPABASE_URL', 'SUPABASE_PUBLISHABLE_KEY'):
         if secret not in workflow_text: failures.append(f'Deploy workflow is missing required secret reference: {secret}')
-    if 'reviewed_at IS NOT NULL' not in (ROOT / 'src/index.js').read_text(encoding='utf-8'):
+    worker_source = (ROOT / 'src/index.js').read_text(encoding='utf-8')
+    if 'PBKDF2' in worker_source or 'PASSWORD_ITERATIONS' in worker_source: failures.append('Worker still performs compute-heavy custom password hashing; managed auth should own password verification.')
+    if 'SUPABASE_PUBLISHABLE_KEY' not in worker_source or '/auth/v1/user' not in worker_source: failures.append('Managed-auth provider validation is missing.')
+    if 'reviewed_at IS NOT NULL' not in worker_source:
         failures.append('Question review gate is missing from API code')
     if not (ROOT / 'GO_LIVE_CHECKLIST_HINGLISH.md').exists(): failures.append('Go-live checklist is missing')
 
