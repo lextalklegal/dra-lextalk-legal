@@ -1,0 +1,33 @@
+{
+  "$schema": "https://unpkg.com/wrangler@latest/config-schema.json",
+  "name": "dra-lextalk-legal",
+  "main": "src/index.js",
+  "compatibility_date": "2026-10-18",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "dra-lextalk-legal-db",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "APP_NAME": "DRA Learning by Lex Talk Legal",
+    "PUBLIC_APP_URL": "https://dra.lextalk.legal",
+    "REQUIRE_VERIFIED_EMAIL": "false",
+    "EMAIL_FROM_NAME": "DRA Learning | Lex Talk Legal",
+    "COMMUNITY_WHATSAPP_URL": ""
+  },
+  "observability": {
+    "enabled": true
+  },
+  "limits": {
+    "cpu_ms": 1000
+  }
+}

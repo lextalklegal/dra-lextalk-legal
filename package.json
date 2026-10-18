@@ -1,0 +1,23 @@
+{
+  "name": "dra-lextalk-legal",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DRA multilingual practice, mock tests, classes and membership platform for dra.lextalk.legal",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "node --check src/index.js && node --check public/app.js && node --check public/admin.js && node --check public/setup.js",
+    "db:local": "wrangler d1 migrations apply dra-lextalk-legal-db --local",
+    "db:remote": "wrangler d1 migrations apply dra-lextalk-legal-db --remote",
+    "db:status": "wrangler d1 migrations list dra-lextalk-legal-db --remote",
+    "validate": "python scripts/validate_project.py",
+    "configure:d1": "python scripts/set_d1_database_id.py"
+  },
+  "devDependencies": {
+    "wrangler": "4.147.0"
+  }
+}

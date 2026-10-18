@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10243a">
+  <meta name="description" content="DRA exam practice by Lex Talk Legal: multilingual MCQ practice, mock tests, revision classes and official application guidance.">
+  <meta name="robots" content="noindex,nofollow">
+  <title>DRA Learning | Lex Talk Legal</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body id="top">
+  <header class="site-header">
+    <a class="brand" href="/" aria-label="DRA Learning home">
+      <span class="brand-mark">DRA</span>
+      <span class="brand-text"><strong>DRA Learning</strong><small>by Lex Talk Legal</small></span>
+    </a>
+    <nav class="main-nav" aria-label="Main navigation">
+      <a href="#practice">Practice</a><a href="#classes">Classes</a><a href="#official">IIBF guidance</a>
+    </nav>
+    <div class="header-actions">
+      <span id="userBadge" class="user-badge hidden"></span>
+      <button class="btn btn-quiet" id="loginBtn">Log in</button>
+      <button class="btn btn-primary" id="signupBtn">Create account</button>
+      <button class="btn btn-quiet hidden" id="logoutBtn">Log out</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero section-wrap">
+      <div class="hero-copy">
+        <div class="eyebrow"><span class="eyebrow-dot"></span> DRA exam preparation · built for learners</div>
+        <h1>Prepare with purpose.<br><span>Practise in your language.</span></h1>
+        <p class="hero-lede">MCQ practice, timed mock tests, revision sessions and clear guidance for the IIBF Debt Recovery Agent certificate process—all in one learning space.</p>
+        <div class="hero-actions"><a class="btn btn-primary btn-large" href="#practice">Start free practice <span aria-hidden="true">→</span></a><a class="btn btn-outline btn-large" href="#classes">Explore classes</a></div>
+        <div class="hero-proof"><span class="proof-icon">✓</span><span>One free starter mock per account</span><span class="proof-separator">·</span><span>Progress saved after login</span></div>
+      </div>
+      <div class="hero-visual" aria-label="Learning dashboard preview">
+        <div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div>
+        <div class="practice-preview">
+          <div class="preview-top"><span class="live-dot"></span> PRACTICE SESSION <span class="preview-pill">Demo</span></div>
+          <div class="preview-question">Which approach best supports professional recovery communication?</div>
+          <div class="preview-option selected"><span>A</span><span>Respectful, factual and authorised communication</span><b>✓</b></div>
+          <div class="preview-option"><span>B</span><span>Make promises without approval</span></div>
+          <div class="preview-option"><span>C</span><span>Share account details publicly</span></div>
+          <div class="preview-bottom"><span>Illustrative question</span><span class="preview-progress"><i></i></span></div>
+        </div>
+        <div class="floating-card floating-language"><span class="floating-icon">文</span><span><strong>Multilingual</strong><small>Reviewed translations</small></span></div>
+        <div class="floating-card floating-score"><span class="score-ring">↗</span><span><strong>Track progress</strong><small>Learn from every mock</small></span></div>
+      </div>
+    </section>
+
+    <section class="trust-strip section-wrap" aria-label="Learning features">
+      <div><span class="trust-icon">01</span><span><strong>Timed MCQs</strong><small>Practise exam-style pacing</small></span></div>
+      <div><span class="trust-icon">02</span><span><strong>Language choice</strong><small>Choose an available reviewed version</small></span></div>
+      <div><span class="trust-icon">03</span><span><strong>Progress history</strong><small>Review attempts and explanations</small></span></div>
+      <div><span class="trust-icon">04</span><span><strong>Revision classes</strong><small>Join scheduled learning sessions</small></span></div>
+    </section>
+
+    <section id="practice" class="section-wrap section-block">
+      <div class="section-heading">
+        <div><div class="eyebrow">LEARN BY DOING</div><h2>Practice centre</h2><p>Start with the free mock. More tests will unlock as the reviewed question bank grows.</p></div>
+        <label class="language-control"><span>Test language</span><select id="languageSelect" aria-label="Select test language"><option value="en">English</option><option value="hi">Hindi</option></select></label>
+      </div>
+      <div id="testsGrid" class="tests-grid"><div class="loading-card">Loading practice tests…</div></div>
+      <div id="testMessage" class="notice hidden" role="status"></div>
+      <div id="plans" class="plans-area"><div class="plans-heading"><h3>More practice & membership</h3><p>Paid packages will appear here after pricing and payment setup are completed.</p></div><div id="plansDynamic" class="tests-grid"></div></div>
+    </section>
+
+    <section id="testRunner" class="section-wrap test-runner hidden" aria-live="polite">
+      <div class="test-runner-top"><div><div class="eyebrow">YOUR TEST</div><h2 id="runnerTitle">Practice test</h2><p id="runnerSubtitle" class="muted">Read each question carefully.</p></div><div class="timer-card"><small>TIME REMAINING</small><strong id="timerDisplay">--:--</strong></div></div>
+      <div id="resultBanner" class="result-banner hidden"></div>
+      <div class="runner-layout"><aside id="questionNav" class="question-nav" aria-label="Question navigator"></aside><article id="questionCard" class="question-card"></article></div>
+      <div class="runner-actions"><button class="btn btn-outline" id="prevQuestion">← Previous</button><span id="questionPosition" class="muted">Question 1 of 5</span><div class="runner-action-right"><button class="btn btn-outline" id="nextQuestion">Next →</button><button class="btn btn-primary" id="submitTest">Submit test</button><button class="btn btn-outline hidden" id="closeResult">Back to practice</button></div></div>
+    </section>
+
+    <section id="dashboard" class="section-wrap section-block hidden">
+      <div class="section-heading"><div><div class="eyebrow">YOUR LEARNING SPACE</div><h2>My progress</h2><p>Review your recent attempts and keep your preparation on track.</p></div><a class="text-link" href="/admin.html" id="adminLink" hidden>Open admin panel →</a></div>
+      <div id="historyList" class="history-list"><div class="loading-card">Loading progress…</div></div>
+    </section>
+
+    <section id="classes" class="section-block section-tint">
+      <div class="section-wrap">
+        <div class="section-heading"><div><div class="eyebrow">STAY CONSISTENT</div><h2>Classes & revision sessions</h2><p>Join scheduled revision/coaching sessions. Availability and language are shown on each session.</p></div><span class="small-tag">Live schedule</span></div>
+        <div id="classesGrid" class="classes-grid"><div class="loading-card">Loading upcoming sessions…</div></div>
+        <p class="fine-print">These are independent learning/revision sessions. They do not replace any mandatory training that must be completed through an IIBF-recognised/accredited institution, where applicable.</p>
+      </div>
+    </section>
+
+    <section id="official" class="section-wrap section-block official-section">
+      <div class="official-card"><div class="official-badge">OFFICIAL PROCESS</div><div><h2>Applying for the IIBF DRA certificate</h2><p>Check the current eligibility, training and examination requirements directly with IIBF before applying. We provide learning support and guidance; we do not issue the certificate.</p><a class="btn btn-primary" href="https://www.iibf.org.in/certificate-examination-for-DRA" target="_blank" rel="noopener noreferrer">Visit IIBF DRA page ↗</a></div><div class="official-side"><span>✓</span><strong>Always verify the latest notice</strong><small>Dates, language availability, fees and eligibility can change.</small></div></div>
+    </section>
+
+    <section class="community-band">
+      <div class="section-wrap community-inner"><div><div class="eyebrow eyebrow-light">DRA COMMUNITY INDIA</div><h2>Learn together. Stay exam-ready.</h2><p>Follow Lex Talk Legal for DRA explainers and learning updates.</p></div><div class="community-actions"><a class="btn btn-white" href="https://www.youtube.com/@lextalklegal" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a><a class="btn btn-outline-light" id="communityLink" href="#" hidden target="_blank" rel="noopener noreferrer">Join WhatsApp community ↗</a></div></div>
+    </section>
+  </main>
+
+  <footer class="site-footer"><div class="section-wrap footer-inner"><a class="brand brand-footer" href="/"><span class="brand-mark">DRA</span><span class="brand-text"><strong>DRA Learning</strong><small>by Lex Talk Legal</small></span></a><div class="footer-copy"><p>Independent educational resource. Not an official IIBF website and not endorsed by IIBF.</p><small>© <span id="yearNow"></span> Lex Talk Legal · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></small></div><a class="back-top" href="#top">Back to top ↑</a></div></footer>
+
+  <dialog id="authDialog" class="auth-dialog"><button class="dialog-close" id="closeAuth" aria-label="Close login dialog">×</button><div class="auth-brand"><span class="brand-mark">DRA</span><div><strong>Welcome to DRA Learning</strong><small>Save attempts and unlock your learning dashboard.</small></div></div><div class="auth-tabs"><button class="auth-tab active" id="showLogin">Log in</button><button class="auth-tab" id="showRegister">Create account</button></div><form id="loginForm" class="auth-form"><label>Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Password<input name="password" type="password" autocomplete="current-password" required minlength="10"></label><button class="btn btn-primary btn-full" type="submit">Log in</button><p class="form-message" id="loginMessage" role="status"></p></form><form id="registerForm" class="auth-form hidden"><label>Full name<input name="full_name" autocomplete="name" required minlength="2" maxlength="120"></label><label>Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" maxlength="25"></label><label>Create password<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128"><small>Use at least 10 characters.</small></label><button class="btn btn-primary btn-full" type="submit">Create free account</button><p class="form-message" id="registerMessage" role="status"></p></form><p class="auth-note">Create an account only for your own learning. Keep your password private.</p></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
