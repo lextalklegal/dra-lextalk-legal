@@ -34,7 +34,7 @@ def main() -> int:
     except Exception as exc:
         failures.append(f'wrangler.jsonc is not valid JSONC-without-comments: {exc}')
 
-    for file in ('src/index.js', 'public/app.js', 'public/admin.js', 'public/setup.js', 'public/auth-client.js'):
+    for file in ('src/index.js', 'public/app.js', 'public/admin.js', 'public/setup.js', 'public/auth-client.js', 'public/site-redesign.js'):
         result = subprocess.run(['node', '--check', str(ROOT / file)], capture_output=True, text=True)
         if result.returncode:
             failures.append(f'JavaScript syntax failed for {file}: {result.stderr.strip()}')
