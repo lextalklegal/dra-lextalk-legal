@@ -1,105 +1,139 @@
 <!doctype html>
-<html lang="en">
+<html lang="hi">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#10243a">
-  <meta name="description" content="DRA exam practice by Lex Talk Legal: multilingual MCQ practice, mock tests, revision classes and official application guidance.">
-  <meta name="robots" content="noindex,nofollow">
-  <title>DRA Learning | Lex Talk Legal</title>
+  <meta name="description" content="DRA exam preparation in simple Hindi and English. Practice MCQs, timed mock tests, live and recorded learning options, community support and career guidance by Lex Talk Legal.">
+  <meta name="robots" content="index,follow">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <title>DRA Learning | आसान भाषा में DRA की तैयारी — Lex Talk Legal</title>
+  <link rel="preconnect" href="https://lextalk.legal">
   <link rel="stylesheet" href="/styles.css">
-  <script src="/auth-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script><script src="/auth-client.js"></script><script src="/app.js" defer></script>
+  <link rel="stylesheet" href="/site-redesign.css">
+  <script src="/auth-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js"></script>
+  <script src="/auth-client.js"></script>
+  <script src="/app.js" defer></script>
+  <script src="/site-redesign.js" defer></script>
 </head>
 <body id="top">
-  <header class="site-header">
-    <a class="brand" href="/" aria-label="DRA Learning home">
-      <span class="brand-mark">DRA</span>
-      <span class="brand-text"><strong>DRA Learning</strong><small>by Lex Talk Legal</small></span>
+  <div class="announcement-bar"><div class="announcement-inner"><span class="announcement-dot"></span><span data-i18n="announcement">DRA की तैयारी आसान भाषा में — अपनी speed से सीखें, अपनी भाषा में समझें।</span><a href="#practice" data-i18n="announcementCta">Free mock आज़माएँ →</a></div></div>
+  <header class="site-header redesigned-header">
+    <a class="brand redesigned-brand" href="#top" aria-label="DRA Learning home">
+      <img src="https://lextalk.legal/assets/LexTalkLegal_Logo-wo-bg.png" alt="Lex Talk Legal logo" class="brand-logo" loading="eager">
+      <span class="brand-divider"></span>
+      <span class="brand-text"><strong>DRA Learning</strong><small data-i18n="byLex">by Lex Talk Legal</small></span>
     </a>
-    <nav class="main-nav" aria-label="Main navigation">
-      <a href="#practice">Practice</a><a href="#classes">Classes</a><a href="#official">IIBF guidance</a>
+    <nav class="main-nav" id="mainNav" aria-label="Main navigation">
+      <a href="#how" data-i18n="navHow">कैसे सीखें</a><a href="#practice" data-i18n="navPractice">Practice Test</a><a href="#courses" data-i18n="navCourses">Learning Plans</a><a href="#classes" data-i18n="navClasses">Live Classes</a><a href="#community" data-i18n="navCommunity">Community</a>
     </nav>
-    <div class="header-actions">
+    <div class="header-actions redesigned-header-actions">
+      <label class="site-language-wrap"><span aria-hidden="true">文</span><select id="siteLanguageSelect" aria-label="Website language"><option value="hi">हिन्दी</option><option value="en">English</option></select></label>
       <span id="userBadge" class="user-badge hidden"></span>
-      <button class="btn btn-quiet" id="loginBtn">Log in</button>
-      <button class="btn btn-primary" id="signupBtn">Create account</button>
-      <button class="btn btn-quiet hidden" id="logoutBtn">Log out</button>
+      <button class="btn btn-quiet" id="loginBtn" data-i18n="login">लॉग इन</button>
+      <button class="btn btn-primary" id="signupBtn" data-i18n="signup">Free account बनाएँ</button>
+      <button class="btn btn-quiet hidden" id="logoutBtn" data-i18n="logout">लॉग आउट</button>
     </div>
+    <button class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu" aria-expanded="false">☰</button>
   </header>
 
   <main>
-    <section class="hero section-wrap">
+    <section class="hero redesign-hero section-wrap" aria-labelledby="hero-title">
       <div class="hero-copy">
-        <div class="eyebrow"><span class="eyebrow-dot"></span> DRA exam preparation · built for learners</div>
-        <h1>Prepare with purpose.<br><span>Practise in your language.</span></h1>
-        <p class="hero-lede">MCQ practice, timed mock tests, revision sessions and clear guidance for the IIBF Debt Recovery Agent certificate process—all in one learning space.</p>
-        <div class="hero-actions"><a class="btn btn-primary btn-large" href="#practice">Start free practice <span aria-hidden="true">→</span></a><a class="btn btn-outline btn-large" href="#classes">Explore classes</a></div>
-        <div class="hero-proof"><span class="proof-icon">✓</span><span>One free starter mock per account</span><span class="proof-separator">·</span><span>Progress saved after login</span></div>
+        <div class="eyebrow"><span class="eyebrow-dot"></span><span data-i18n="heroTag">शुरुआत यहीं से करें — कोई सवाल छोटा नहीं</span></div>
+        <h1 id="hero-title"><span data-i18n="heroTitle1">DRA Exam की तैयारी</span><br><em data-i18n="heroTitle2">अब आसान भाषा में।</em></h1>
+        <p class="hero-lede" data-i18n="heroText">English कठिन लगती है? कोई बात नहीं। Topic को आसान शब्दों में समझें, छोटे-छोटे MCQs से practice करें और exam जैसा timed mock देकर confidence बढ़ाएँ।</p>
+        <div class="hero-points"><span><b>✓</b><span data-i18n="heroPoint1">सरल हिन्दी + English</span></span><span><b>✓</b><span data-i18n="heroPoint2">Timed mock tests</span></span><span><b>✓</b><span data-i18n="heroPoint3">Course के बाद भी support</span></span></div>
+        <div class="hero-actions"><a class="btn btn-primary btn-large" href="#practice"><span aria-hidden="true">▶</span> <span data-i18n="heroCta1">Free practice शुरू करें</span> <span aria-hidden="true">→</span></a><a class="btn btn-outline btn-large" href="#courses" data-i18n="heroCta2">Learning plans देखें</a></div>
+        <p class="hero-fineprint" data-i18n="heroNote">अपनी सुविधा से पढ़ें • Live + recorded options • Payment से पहले details confirm करें</p>
       </div>
-      <div class="hero-visual" aria-label="Learning dashboard preview">
-        <div class="visual-orbit orbit-one"></div><div class="visual-orbit orbit-two"></div>
-        <div class="practice-preview">
-          <div class="preview-top"><span class="live-dot"></span> PRACTICE SESSION <span class="preview-pill">Demo</span></div>
-          <div class="preview-question">Which approach best supports professional recovery communication?</div>
-          <div class="preview-option selected"><span>A</span><span>Respectful, factual and authorised communication</span><b>✓</b></div>
-          <div class="preview-option"><span>B</span><span>Make promises without approval</span></div>
-          <div class="preview-option"><span>C</span><span>Share account details publicly</span></div>
-          <div class="preview-bottom"><span>Illustrative question</span><span class="preview-progress"><i></i></span></div>
+      <div class="hero-visual">
+        <div class="hero-glow"></div><div class="orbit-label"><span>अ</span><span>आ</span><span>A</span></div>
+        <div class="learning-board">
+          <div class="board-head"><div class="board-logo">DRA</div><div><strong data-i18n="boardTitle">आपकी learning journey</strong><small data-i18n="boardSub">एक step एक बार में</small></div><span class="board-pill">START HERE</span></div>
+          <div class="board-welcome"><small data-i18n="boardKicker">आज की शुरुआत</small><h3 data-i18n="boardHeadline">पहले समझें। फिर practice करें।</h3><p data-i18n="boardText">गलती भी learning का हिस्सा है। हर attempt के बाद अपना जवाब समझें।</p></div>
+          <div class="pathway-list"><div class="pathway-item"><span class="pathway-number green">01</span><span><strong data-i18n="path1">Topic को आसान भाषा में समझें</strong><small data-i18n="path1s">Short lessons और notes</small></span><b>✓</b></div><div class="pathway-item"><span class="pathway-number blue">02</span><span><strong data-i18n="path2">MCQs से practice करें</strong><small data-i18n="path2s">अपनी गति से सीखें</small></span><b>↗</b></div><div class="pathway-item"><span class="pathway-number gold">03</span><span><strong data-i18n="path3">Timed mock देकर देखें</strong><small data-i18n="path3s">Score और answers review करें</small></span><b>↗</b></div></div>
+          <div class="board-footer" data-i18n="boardFooter">सवाल पूछना सीखने की ताकत है।</div>
         </div>
-        <div class="floating-card floating-language"><span class="floating-icon">文</span><span><strong>Multilingual</strong><small>Reviewed translations</small></span></div>
-        <div class="floating-card floating-score"><span class="score-ring">↗</span><span><strong>Track progress</strong><small>Learn from every mock</small></span></div>
+        <div class="floating-note float-one"><span>文</span><span><strong data-i18n="float1">अपनी भाषा में</strong><small data-i18n="float1s">जहाँ content उपलब्ध हो</small></span></div>
+        <div class="floating-note float-two"><span>♡</span><span><strong data-i18n="float2">एक community साथ</strong><small data-i18n="float2s">Guidance और updates</small></span></div>
       </div>
     </section>
 
-    <section class="trust-strip section-wrap" aria-label="Learning features">
-      <div><span class="trust-icon">01</span><span><strong>Timed MCQs</strong><small>Practise exam-style pacing</small></span></div>
-      <div><span class="trust-icon">02</span><span><strong>Language choice</strong><small>Choose an available reviewed version</small></span></div>
-      <div><span class="trust-icon">03</span><span><strong>Progress history</strong><small>Review attempts and explanations</small></span></div>
-      <div><span class="trust-icon">04</span><span><strong>Revision classes</strong><small>Join scheduled learning sessions</small></span></div>
+    <section class="value-strip section-wrap" aria-label="Learning benefits">
+      <div class="value-item"><span class="value-icon mint">✓</span><span><strong data-i18n="value1">Zero से शुरुआत</strong><small data-i18n="value1s">Beginner friendly</small></span></div>
+      <div class="value-item"><span class="value-icon blue">▤</span><span><strong data-i18n="value2">Exam-style practice</strong><small data-i18n="value2s">Timer + answer review</small></span></div>
+      <div class="value-item"><span class="value-icon gold">✦</span><span><strong data-i18n="value3">Live + recorded options</strong><small data-i18n="value3s">अपने schedule के हिसाब से</small></span></div>
+      <div class="value-item"><span class="value-icon violet">♧</span><span><strong data-i18n="value4">Course के बाद भी community</strong><small data-i18n="value4s">Doubts, updates और career guidance</small></span></div>
     </section>
 
-    <section id="practice" class="section-wrap section-block">
-      <div class="section-heading">
-        <div><div class="eyebrow">LEARN BY DOING</div><h2>Practice centre</h2><p>Start with the free mock. More tests will unlock as the reviewed question bank grows.</p></div>
-        <label class="language-control"><span>Test language</span><select id="languageSelect" aria-label="Select test language"><option value="en">English</option><option value="hi">Hindi</option></select></label>
+    <section id="how" class="section-wrap section-block">
+      <div class="section-heading"><div><span class="section-kicker" data-i18n="howKicker">SIMPLE • STEP BY STEP</span><h2 data-i18n="howTitle">तैयारी को आसान बनाते हैं</h2><p data-i18n="howText">एक साथ सब कुछ याद करने की ज़रूरत नहीं। छोटे steps से आगे बढ़िए।</p></div><span class="heading-note" data-i18n="howBadge">आपकी तैयारी का रास्ता · 01—03</span></div>
+      <div class="steps-grid">
+        <article class="step-card"><span class="step-index">01</span><div class="step-symbol green">▤</div><h3 data-i18n="step1Title">आसान भाषा में सीखें</h3><p data-i18n="step1Text">Topic-wise notes और planned lessons से concept समझें। जहाँ जरूरत हो, अपनी भाषा में समझने के लिए support माँगें।</p><a href="#courses" class="text-link" data-i18n="step1Link">Learning plans देखें →</a></article>
+        <article class="step-card featured"><span class="step-index">02</span><div class="step-symbol blue">✓</div><h3 data-i18n="step2Title">Exam जैसे mocks दें</h3><p data-i18n="step2Text">Timer के साथ सवाल हल करें। Attempt के बाद selected answer, correct option और उपलब्ध explanation देखें।</p><a href="#practice" class="text-link" data-i18n="step2Link">Free practice शुरू करें →</a></article>
+        <article class="step-card"><span class="step-index">03</span><div class="step-symbol gold">♧</div><h3 data-i18n="step3Title">अकेले मत रहिए</h3><p data-i18n="step3Text">Community invitation, legal-awareness updates और career/job guidance के लिए team से जुड़ें। Job की guarantee नहीं दी जाती।</p><a href="#community" class="text-link" data-i18n="step3Link">Community से जुड़ें →</a></article>
       </div>
-      <div id="testsGrid" class="tests-grid"><div class="loading-card">Loading practice tests…</div></div>
-      <div id="testMessage" class="notice hidden" role="status"></div>
-      <div id="plans" class="plans-area"><div class="plans-heading"><h3>More practice & membership</h3><p>Paid packages will appear here after pricing and payment setup are completed.</p></div><div id="plansDynamic" class="tests-grid"></div></div>
+    </section>
+
+    <section id="practice" class="section-block section-tint redesigned-practice">
+      <div class="section-wrap">
+        <div class="section-heading"><div><span class="section-kicker" data-i18n="practiceKicker">TRY IT FIRST</span><h2 data-i18n="practiceTitle">Practice Centre</h2><p data-i18n="practiceText">पहले free starter mock आज़माएँ। Test language वही चुनें जिसमें reviewed questions available हैं।</p></div><label class="language-control"><span data-i18n="testLanguage">Test की भाषा</span><select id="languageSelect" aria-label="Select test language"><option value="en">English</option><option value="hi">हिन्दी</option></select></label></div>
+        <div id="testsGrid" class="tests-grid"><div class="loading-card">Practice tests load हो रहे हैं…</div></div><div id="testMessage" class="notice hidden" role="status"></div>
+        <div class="member-dynamic"><h3 data-i18n="memberDynamicTitle">Additional memberships</h3><div id="plansDynamic" class="tests-grid"><div class="loading-card">Packages load हो रहे हैं…</div></div></div>
+      </div>
     </section>
 
     <section id="testRunner" class="section-wrap test-runner hidden" aria-live="polite">
-      <div class="test-runner-top"><div><div class="eyebrow">YOUR TEST</div><h2 id="runnerTitle">Practice test</h2><p id="runnerSubtitle" class="muted">Read each question carefully.</p></div><div class="timer-card"><small>TIME REMAINING</small><strong id="timerDisplay">--:--</strong></div></div>
+      <div class="test-runner-top"><div><div class="eyebrow" data-i18n="runnerEyebrow">YOUR TEST</div><h2 id="runnerTitle">Practice test</h2><p id="runnerSubtitle" class="muted">Read each question carefully.</p></div><div class="timer-card"><small data-i18n="timeRemaining">TIME REMAINING</small><strong id="timerDisplay">--:--</strong></div></div>
       <div id="resultBanner" class="result-banner hidden"></div>
       <div class="runner-layout"><aside id="questionNav" class="question-nav" aria-label="Question navigator"></aside><article id="questionCard" class="question-card"></article></div>
       <div class="runner-actions"><button class="btn btn-outline" id="prevQuestion">← Previous</button><span id="questionPosition" class="muted">Question 1 of 5</span><div class="runner-action-right"><button class="btn btn-outline" id="nextQuestion">Next →</button><button class="btn btn-primary" id="submitTest">Submit test</button><button class="btn btn-outline hidden" id="closeResult">Back to practice</button></div></div>
     </section>
 
-    <section id="dashboard" class="section-wrap section-block hidden">
-      <div class="section-heading"><div><div class="eyebrow">YOUR LEARNING SPACE</div><h2>My progress</h2><p>Review your recent attempts and keep your preparation on track.</p></div><a class="text-link" href="/admin.html" id="adminLink" hidden>Open admin panel →</a></div>
-      <div id="historyList" class="history-list"><div class="loading-card">Loading progress…</div></div>
+    <section id="dashboard" class="section-wrap section-block hidden"><div class="section-heading"><div><span class="section-kicker" data-i18n="dashboardKicker">YOUR LEARNING SPACE</span><h2 data-i18n="dashboardTitle">मेरी तैयारी</h2><p data-i18n="dashboardText">Login के बाद आपके recent attempts यहाँ दिखाई देंगे।</p></div><a class="text-link" href="/admin.html" id="adminLink" hidden>Open admin panel →</a></div><div id="historyList" class="history-list"><div class="loading-card">Your attempts will appear here after you start a test.</div></div></section>
+
+    <section id="courses" class="section-wrap section-block courses-section">
+      <div class="section-heading"><div><span class="section-kicker" data-i18n="coursesKicker">LEARN YOUR WAY</span><h2 data-i18n="coursesTitle">अपनी जरूरत के हिसाब से सीखने का plan चुनें</h2><p data-i18n="coursesText">ये DRA Learning की proposed introductory prices हैं। Payment से पहले package, duration और current availability WhatsApp पर confirm करें।</p></div><span class="heading-note" data-i18n="coursesBadge">Simple • Flexible • Supportive</span></div>
+      <div class="course-grid">
+        <article class="course-card"><div class="course-top"><span class="course-icon green">▤</span><span class="course-label" data-i18n="plan1Tag">STARTER</span></div><h3 data-i18n="plan1Title">DRA Basic</h3><p data-i18n="plan1Text">शुरुआत करने वालों के लिए—छोटे lessons और study notes.</p><ul><li data-i18n="plan1b1">Recorded learning resources (जहाँ उपलब्ध)</li><li data-i18n="plan1b2">Topic-wise notes और सरल explanations</li><li data-i18n="plan1b3">Basic practice guidance</li></ul><div class="course-price">₹499 <small data-i18n="proposed">proposed</small></div><a class="btn btn-outline btn-full plan-enquiry" data-plan="DRA Basic" href="https://wa.me/919318445957?text=Namaste%2C%20DRA%20Learning%20website%20se%20DRA%20Basic%20package%20ki%20details%20confirm%20karni%20hain.%20Ref%3A%20DRA_WELCOME." target="_blank" rel="noopener noreferrer" data-i18n="askPackage">Details पूछें</a></article>
+        <article class="course-card course-featured"><div class="popular-ribbon" data-i18n="popular">MOST POPULAR</div><div class="course-top"><span class="course-icon blue">✓</span><span class="course-label" data-i18n="plan2Tag">PRACTICE</span></div><h3 data-i18n="plan2Title">DRA Practice Plus</h3><p data-i18n="plan2Text">उन learners के लिए जिन्हें और test practice चाहिए।</p><ul><li data-i18n="plan2b1">Basic plan की सामग्री</li><li data-i18n="plan2b2">Mock tests और answer review</li><li data-i18n="plan2b3">Available revision sessions</li></ul><div class="course-price">₹1,499 <small data-i18n="proposed">proposed</small></div><a class="btn btn-primary btn-full plan-enquiry" data-plan="DRA Practice Plus" href="https://wa.me/919318445957?text=Namaste%2C%20DRA%20Learning%20website%20se%20DRA%20Practice%20Plus%20package%20ki%20details%20confirm%20karni%20hain.%20Ref%3A%20DRA_WELCOME." target="_blank" rel="noopener noreferrer" data-i18n="askPackage">Details पूछें</a></article>
+        <article class="course-card"><div class="course-top"><span class="course-icon gold">♧</span><span class="course-label" data-i18n="plan3Tag">SUPPORT</span></div><h3 data-i18n="plan3Title">DRA Complete Support</h3><p data-i18n="plan3Text">Structured preparation और human support चाहने वालों के लिए।</p><ul><li data-i18n="plan3b1">Practice Plus की सामग्री</li><li data-i18n="plan3b2">Live + recorded options (batch availability subject to confirmation)</li><li data-i18n="plan3b3">Community, resume/interview pointers</li></ul><div class="course-price">₹2,499 <small data-i18n="proposed">proposed</small></div><a class="btn btn-outline btn-full plan-enquiry" data-plan="DRA Complete Support" href="https://wa.me/919318445957?text=Namaste%2C%20DRA%20Learning%20website%20se%20DRA%20Complete%20Support%20package%20ki%20details%20confirm%20karni%20hain.%20Ref%3A%20DRA_WELCOME." target="_blank" rel="noopener noreferrer" data-i18n="askPackage">Details पूछें</a></article>
+      </div>
+      <p class="small-disclaimer" data-i18n="courseLegalNote">महत्वपूर्ण: ये supplementary preparation plans हैं। Mandatory IIBF-accredited training, Training Completion Certificate या IIBF examination fee इनमें शामिल होने का दावा नहीं है। Official eligibility और requirements IIBF से verify करें।</p>
     </section>
 
     <section id="classes" class="section-block section-tint">
-      <div class="section-wrap">
-        <div class="section-heading"><div><div class="eyebrow">STAY CONSISTENT</div><h2>Classes & revision sessions</h2><p>Join scheduled revision/coaching sessions. Availability and language are shown on each session.</p></div><span class="small-tag">Live schedule</span></div>
-        <div id="classesGrid" class="classes-grid"><div class="loading-card">Loading upcoming sessions…</div></div>
-        <p class="fine-print">These are independent learning/revision sessions. They do not replace any mandatory training that must be completed through an IIBF-recognised/accredited institution, where applicable.</p>
-      </div>
+      <div class="section-wrap"><div class="section-heading"><div><span class="section-kicker" data-i18n="classesKicker">LEARN AROUND YOUR LIFE</span><h2 data-i18n="classesTitle">Live class miss हो जाए? Recording का option पूछें।</h2><p data-i18n="classesText">Available class, language और batch timing नीचे दिखाई जाएगी। Enrolment से पहले recording access और validity confirm करें।</p></div><span class="heading-note" data-i18n="classesBadge">Flexible learning</span></div><div id="classesGrid" class="classes-grid"><div class="loading-card">Upcoming sessions load हो रहे हैं…</div></div><p class="small-disclaimer" data-i18n="classLegalNote">Independent revision/coaching sessions mandatory training का replacement नहीं हैं, जब तक किसी authorised route के तहत अलग से स्पष्ट न बताया जाए।</p></div>
     </section>
 
-    <section id="official" class="section-wrap section-block official-section">
-      <div class="official-card"><div class="official-badge">OFFICIAL PROCESS</div><div><h2>Applying for the IIBF DRA certificate</h2><p>Check the current eligibility, training and examination requirements directly with IIBF before applying. We provide learning support and guidance; we do not issue the certificate.</p><a class="btn btn-primary" href="https://www.iibf.org.in/certificate-examination-for-DRA" target="_blank" rel="noopener noreferrer">Visit IIBF DRA page ↗</a></div><div class="official-side"><span>✓</span><strong>Always verify the latest notice</strong><small>Dates, language availability, fees and eligibility can change.</small></div></div>
+    <section id="community" class="section-wrap section-block community-section">
+      <div class="community-panel"><div class="community-copy"><span class="section-kicker" data-i18n="communityKicker">YOU DON'T HAVE TO LEARN ALONE</span><h2 data-i18n="communityTitle">Course के बाद भी साथ बना रहे।</h2><p data-i18n="communityText">DRA preparation doubts, legal-awareness updates, peer support और उपलब्ध job/career leads के लिए Lex Talk Legal community से जुड़ें। Invite लेने के लिए नीचे message भेजें।</p><div class="community-badges"><span data-i18n="commBenefit1">✓ Study support</span><span data-i18n="commBenefit2">✓ Legal awareness</span><span data-i18n="commBenefit3">✓ Career updates</span></div><a class="btn btn-whatsapp" href="https://wa.me/919318445957?text=Namaste%2C%20main%20dra.lextalk.legal%20website%20se%20DRA%20community%20join%20karne%20aaya%2Faayi%20hoon.%20Please%20community%20invite%20share%20karein.%20Ref%3A%20DRA_WELCOME." target="_blank" rel="noopener noreferrer" data-i18n="communityCTA">WhatsApp पर community invite माँगें ↗</a><small data-i18n="communityNote">Message में DRA_WELCOME लिखा रहेगा, ताकि team को source पता चले।</small></div><div class="community-side"><div class="community-mark">♧</div><strong data-i18n="communitySideTitle">DRA Community India</strong><p data-i18n="communitySideText">Respectful discussion • No spam • No guaranteed jobs • Share only verified information</p><a id="communityLink" class="btn btn-outline community-join-link" href="#" target="_blank" rel="noopener noreferrer" hidden>Join WhatsApp community ↗</a><a class="youtube-button" href="https://www.youtube.com/@lextalklegal?sub_confirmation=1" target="_blank" rel="noopener noreferrer"><span aria-hidden="true">▶</span> <span data-i18n="youtubeCTA">Lex Talk Legal को Subscribe करें</span> ↗</a><div class="discount-note" data-i18n="discountNote">YouTube पर जुड़ें और पूछें कि current learner discounts या offers उपलब्ध हैं या नहीं। Discount automatic/guaranteed नहीं है।</div></div></div>
     </section>
 
-    <section class="community-band">
-      <div class="section-wrap community-inner"><div><div class="eyebrow eyebrow-light">DRA COMMUNITY INDIA</div><h2>Learn together. Stay exam-ready.</h2><p>Follow Lex Talk Legal for DRA explainers and learning updates.</p></div><div class="community-actions"><a class="btn btn-white" href="https://www.youtube.com/@lextalklegal" target="_blank" rel="noopener noreferrer">Watch on YouTube ↗</a><a class="btn btn-outline-light" id="communityLink" href="#" hidden target="_blank" rel="noopener noreferrer">Join WhatsApp community ↗</a></div></div>
+    <section id="payment" class="section-wrap section-block payment-section">
+      <div class="section-heading"><div><span class="section-kicker" data-i18n="paymentKicker">SIMPLE PAYMENT • MANUAL VERIFICATION</span><h2 data-i18n="paymentTitle">UPI से payment करने से पहले details confirm करें</h2><p data-i18n="paymentText">यह manual UPI option है—payment होते ही course अपने-आप activate नहीं होगा। पहले package और amount लिखित में confirm करें।</p></div><span class="safe-badge">🔒 <span data-i18n="safePayment">Safe & clear steps</span></span></div>
+      <div class="payment-grid"><div class="qr-card"><div class="qr-box"><img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&amp;margin=10&amp;data=upi%3A%2F%2Fpay%3Fpa%3D8368268507%40upi%26pn%3DLEXBOTICS%20AI%20MEDIA%20LLP%26cu%3DINR" alt="UPI payment QR for 8368268507@upi" loading="lazy"></div><div class="qr-steps"><strong data-i18n="qrTitle">Payment के बाद ये करें</strong><ol><li data-i18n="qrStep1">अपने UPI app से payment करें, amount पहले confirm करें।</li><li data-i18n="qrStep2">Successful payment का screenshot/reference रखें।</li><li data-i18n="qrStep3">Screenshot WhatsApp पर भेजकर package name लिखें।</li><li data-i18n="qrStep4">Team verification के बाद ही access/enrolment confirm होगा।</li></ol></div></div><aside class="payment-details"><div class="pay-status"><span class="status-dot"></span><span data-i18n="manualReview">Manual verification required</span></div><span class="upi-caption" data-i18n="upiCaption">UPI ID</span><div class="upi-id-line"><strong id="upiIdText">8368268507@upi</strong><button type="button" class="copy-button" id="copyUpi" aria-label="Copy UPI ID">Copy</button></div><p data-i18n="upiNote">UPI PIN, OTP या banking password कभी किसी से share न करें। इस website पर इन्हें enter करने की जरूरत नहीं है।</p><a class="btn btn-whatsapp btn-full" href="https://wa.me/919318445957?text=Namaste%2C%20maine%20DRA%20Learning%20(dra.lextalk.legal)%20course%20ke%20liye%20UPI%20payment%20ki%20hai.%20Main%20payment%20screenshot%2Freference%20bhej%20raha%2Frahi%20hoon.%20Plan%3A%20%5Bpackage%20name%5D.%20Ref%3A%20DRA_WELCOME." target="_blank" rel="noopener noreferrer" data-i18n="sendProof">Payment screenshot WhatsApp पर भेजें ↗</a><p class="small-disclaimer" data-i18n="payLegalNote">Payment से पहले refund policy पढ़ें और total amount confirm करें। गलत payee/name दिखे तो payment रोक दें और हमसे बात करें।</p><a href="/refund-policy.html" class="text-link" data-i18n="refundBeforePay">Cancellation & refund policy देखें →</a></aside></div>
     </section>
+
+    <section id="official" class="section-wrap section-block"><div class="official-card"><div class="official-badge" data-i18n="officialBadge">OFFICIAL PROCESS</div><div><span class="section-kicker" data-i18n="officialKicker">VERIFY FROM THE SOURCE</span><h2 data-i18n="officialTitle">IIBF DRA की official जानकारी verify करें</h2><p data-i18n="officialText">Eligibility, mandatory training, exam dates, fees और exam language बदल सकते हैं। Application या payment करने से पहले official IIBF notice देखें। DRA Learning independent learning resource है और certificate issue नहीं करता।</p><a class="btn btn-primary" href="https://www.iibf.org.in/certificate-examination-for-DRA" target="_blank" rel="noopener noreferrer" data-i18n="officialCTA">Official IIBF DRA page खोलें ↗</a></div><div class="official-aside"><strong data-i18n="officialSideTitle">पहले verify करें</strong><small data-i18n="officialSideText">हम pass होने, certificate या job मिलने की guarantee नहीं देते।</small></div></div></section>
+
+    <section id="faq" class="section-wrap section-block faq-section"><div class="section-heading"><div><span class="section-kicker" data-i18n="faqKicker">COMMON QUESTIONS</span><h2 data-i18n="faqTitle">आपके सवाल, सीधे जवाब</h2><p data-i18n="faqText">अगर कुछ clear न हो तो payment से पहले हमसे पूछें।</p></div></div><div class="faq-list">
+      <details><summary data-i18n="faqQ1">क्या English कमजोर हो तो भी तैयारी कर सकता/सकती हूँ?</summary><p data-i18n="faqA1">हाँ। सीखने का मकसद topics को सरल भाषा में समझना और धीरे-धीरे practice करना है। Test की दूसरी भाषा तभी चुनें जब उस भाषा में reviewed questions उपलब्ध हों।</p></details>
+      <details><summary data-i18n="faqQ2">क्या DRA Learning official IIBF institute है?</summary><p data-i18n="faqA2">नहीं। यह independent exam-preparation resource है, IIBF की official website नहीं। Mandatory training के लिए current IIBF requirements और authorised institution खुद verify करें।</p></details>
+      <details><summary data-i18n="faqQ3">क्या classes live और recorded दोनों होंगी?</summary><p data-i18n="faqA3">Plans के अनुसार live और recorded options रखे जा सकते हैं। Payment से पहले batch dates, recording access, duration और actual inclusions WhatsApp पर लिखित में confirm करें।</p></details>
+      <details><summary data-i18n="faqQ4">UPI payment के बाद account तुरंत activate होगा?</summary><p data-i18n="faqA4">नहीं। Payment proof भेजें; team verify करके enrolment/access confirm करेगी। अपना UPI PIN या OTP कभी share न करें।</p></details>
+      <details><summary data-i18n="faqQ5">क्या नौकरी मिलना guaranteed है?</summary><p data-i18n="faqA5">नहीं। Job leads, resume/interview pointers या career guidance उपलब्ध होने पर share किए जा सकते हैं, लेकिन placement या income guarantee नहीं है।</p></details>
+    </div></section>
+
+    <section id="contact" class="section-wrap section-block contact-section"><div class="contact-card"><div><span class="section-kicker" data-i18n="contactKicker">HUMAN SUPPORT</span><h2 data-i18n="contactTitle">कोई doubt है? पहले बात कर लें।</h2><p data-i18n="contactText">Course details, language support, community invite, payment verification या account issue—हमसे सीधे contact करें।</p><div class="contact-actions"><a class="btn btn-whatsapp" href="https://wa.me/919318445957?text=Namaste%2C%20mujhe%20DRA%20Learning%20website%20dra.lextalk.legal%20se%20help%20chahiye.%20Ref%3A%20DRA_WELCOME." target="_blank" rel="noopener noreferrer">WhatsApp · +91 93184 45957 ↗</a><a class="btn btn-outline" href="mailto:office.lextalklegal@gmail.com">office.lextalklegal@gmail.com</a></div></div><div class="contact-company"><img src="https://lextalk.legal/assets/LexTalkLegal_Logo-wo-bg.png" alt="Lex Talk Legal logo" loading="lazy"><strong>LEXBOTICS AI MEDIA LLP</strong><p>C-147, T/F, Okhla Industrial Area Phase 1,<br>New Delhi — 110025, India</p><small data-i18n="companyNote">DRA Learning • an educational initiative by Lex Talk Legal</small></div></div></section>
   </main>
 
-  <footer class="site-footer"><div class="section-wrap footer-inner"><a class="brand brand-footer" href="/"><span class="brand-mark">DRA</span><span class="brand-text"><strong>DRA Learning</strong><small>by Lex Talk Legal</small></span></a><div class="footer-copy"><p>Independent educational resource. Not an official IIBF website and not endorsed by IIBF.</p><small>© <span id="yearNow"></span> Lex Talk Legal · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></small></div><a class="back-top" href="#top">Back to top ↑</a></div></footer>
+  <footer class="site-footer redesigned-footer"><div class="section-wrap footer-grid"><div class="footer-brand"><img src="https://lextalk.legal/assets/LexTalkLegal_Logo-wo-bg.png" alt="Lex Talk Legal logo" loading="lazy"><p data-i18n="footerPromise">Law, learning और career guidance को सरल और accessible बनाने की कोशिश।</p><a href="mailto:office.lextalklegal@gmail.com">office.lextalklegal@gmail.com</a><a href="tel:+919318445957">+91 93184 45957</a></div><div class="footer-links"><strong data-i18n="footerLearn">Learn</strong><a href="#practice" data-i18n="footerPractice">Practice tests</a><a href="#courses" data-i18n="footerCourses">Learning plans</a><a href="#classes" data-i18n="footerClasses">Classes</a><a href="#community" data-i18n="footerCommunity">Community</a></div><div class="footer-links"><strong data-i18n="footerPolicies">Policies & help</strong><a href="/about.html" data-i18n="footerAbout">About us</a><a href="/contact.html" data-i18n="footerContact">Contact</a><a href="/privacy.html" data-i18n="footerPrivacy">Privacy policy</a><a href="/terms.html" data-i18n="footerTerms">Terms of use</a><a href="/refund-policy.html" data-i18n="footerRefund">Cancellation & refund</a><a href="/disclaimer.html" data-i18n="footerDisclaimer">Educational disclaimer</a><a href="/community-guidelines.html" data-i18n="footerGuidelines">Community guidelines</a><a href="/accessibility.html" data-i18n="footerAccessibility">Accessibility</a></div><div class="footer-entity"><strong>LEXBOTICS AI MEDIA LLP</strong><p>C-147, T/F, Okhla Industrial Area Phase 1,<br>New Delhi 110025</p><small data-i18n="footerNote">Independent education resource · Not an official IIBF website</small><a href="https://www.youtube.com/@lextalklegal?sub_confirmation=1" target="_blank" rel="noopener noreferrer">YouTube: Lex Talk Legal ↗</a></div></div><div class="section-wrap footer-bottom"><small>© <span id="yearNow"></span> LEXBOTICS AI MEDIA LLP. <span data-i18n="rights">All rights reserved.</span></small><a href="#top" data-i18n="backTop">Back to top ↑</a></div></footer>
 
-  <dialog id="authDialog" class="auth-dialog"><button class="dialog-close" id="closeAuth" aria-label="Close login dialog">×</button><div class="auth-brand"><span class="brand-mark">DRA</span><div><strong>Welcome to DRA Learning</strong><small>Save attempts and unlock your learning dashboard.</small></div></div><div class="auth-tabs"><button class="auth-tab active" id="showLogin">Log in</button><button class="auth-tab" id="showRegister">Create account</button></div><form id="loginForm" class="auth-form"><label>Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Password<input name="password" type="password" autocomplete="current-password" required minlength="10"></label><button class="btn btn-primary btn-full" type="submit">Log in</button><p class="form-message" id="loginMessage" role="status"></p></form><form id="registerForm" class="auth-form hidden"><label>Full name<input name="full_name" autocomplete="name" required minlength="2" maxlength="120"></label><label>Email address<input name="email" type="email" autocomplete="email" required maxlength="254"></label><label>Phone (optional)<input name="phone" type="tel" autocomplete="tel" maxlength="25"></label><label>Create password<input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128"><small>Use at least 10 characters. Your password is securely managed by our authentication provider.</small></label><button class="btn btn-primary btn-full" type="submit">Create free account</button><p class="form-message" id="registerMessage" role="status"></p></form><p class="auth-note">Email confirmation may be required. Your password is managed by Supabase Auth, not stored by DRA Learning.</p></dialog>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="authDialog" class="auth-dialog redesigned-auth-dialog"><button class="dialog-close" id="closeAuth" aria-label="Close login dialog">×</button><div class="auth-brand"><img src="https://lextalk.legal/assets/LexTalkLegal_Logo-wo-bg.png" alt="Lex Talk Legal logo"><div><strong data-i18n="authWelcome">DRA Learning में आपका स्वागत है</strong><small data-i18n="authSub">Free mock और progress save करने के लिए account बनाएँ।</small></div></div><div class="auth-tabs"><button class="auth-tab active" id="showLogin" data-i18n="login">लॉग इन</button><button class="auth-tab" id="showRegister" data-i18n="signupShort">Account बनाएँ</button></div><form id="loginForm" class="auth-form"><label><span data-i18n="emailLabel">Email address</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label><label><span data-i18n="passwordLabel">Password</span><input name="password" type="password" autocomplete="current-password" required minlength="10"></label><button class="btn btn-primary btn-full" type="submit" data-i18n="login">लॉग इन</button><p class="form-message" id="loginMessage" role="status"></p></form><form id="registerForm" class="auth-form hidden"><label><span data-i18n="nameLabel">पूरा नाम</span><input name="full_name" autocomplete="name" required minlength="2" maxlength="120"></label><label><span data-i18n="emailLabel">Email address</span><input name="email" type="email" autocomplete="email" required maxlength="254"></label><label><span data-i18n="phoneLabel">Phone (optional)</span><input name="phone" type="tel" autocomplete="tel" maxlength="25"></label><label><span data-i18n="newPassLabel">Password बनाएँ</span><input name="password" type="password" autocomplete="new-password" required minlength="10" maxlength="128"><small data-i18n="passwordHint">कम से कम 10 characters रखें। Password आपका authentication provider manage करता है।</small></label><button class="btn btn-primary btn-full" type="submit" data-i18n="createAccount">Free account बनाएँ</button><p class="form-message" id="registerMessage" role="status"></p></form><p class="auth-note" data-i18n="authNote">Email confirmation जरूरी हो सकती है। DRA Learning IIBF की official website नहीं है।</p></dialog>
+  <div id="toast" class="toast redesigned-toast" role="status" aria-live="polite"></div>
+  <a class="floating-whatsapp" href="https://wa.me/919318445957?text=Namaste%2C%20mujhe%20DRA%20Learning%20website%20se%20help%20chahiye.%20Ref%3A%20DRA_WELCOME." target="_blank" rel="noopener noreferrer" aria-label="WhatsApp DRA Learning support"><span aria-hidden="true">◉</span><span data-i18n="floatingHelp">Help चाहिए?</span></a>
 </body>
 </html>
