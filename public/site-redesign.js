@@ -1,6 +1,17 @@
 (function(){
   "use strict";
   var copyTimer;
+  var UPI_QR_MATRIX=["00000000000000000000000000000000000000000","00000000000000000000000000000000000000000","00000000000000000000000000000000000000000","00000000000000000000000000000000000000000","00001111111011010000100101111011111110000","00001000001011100010010001111010000010000","00001011101001111100110110101010111010000","00001011101011010001010001110010111010000","00001011101000011110110011110010111010000","00001000001001100010100000100010000010000","00001111111010101010101010101011111110000","00000000000011101011010000010000000000000","00001011011100011001010111101010010110000","00001001110111100110100101111010001110000","00001110111001011100011010011010010000000","00001100010000101001010100100000110010000","00001001111111101011000110101000000000000","00001101100010110110110010010001001100000","00000100111110111001011011111101011000000","00000011010001100001000111100101100100000","00001101101100101011011001010111101110000","00000101100011010001110001011011101110000","00000101001011001101100001101000111110000","00001011110111110100010101010011110010000","00000001001100100101111110001111111100000","00001010000010110000001011111111100110000","00000011101100110010110001111001001110000","00000111100110101000100100101001100010000","00001011111001001100010010001111111110000","00000000000010000001101110101000111000000","00001111111011110000111101111010101100000","00001000001010011001011101111000101100000","00001011101000110010000010111111111100000","00001011101010110001100101011100000000000","00001011101011010100100001010111011000000","00001000001000111111111010001111100010000","00001111111010101000011011110101010000000","00000000000000000000000000000000000000000","00000000000000000000000000000000000000000","00000000000000000000000000000000000000000","00000000000000000000000000000000000000000"];
+  function renderLocalUpiQr(){
+    var host=document.getElementById('upiQrCode');if(!host)return;
+    var size=UPI_QR_MATRIX.length,runs=[];
+    for(var y=0;y<size;y++){var row=UPI_QR_MATRIX[y],x=0;while(x<size){if(row.charAt(x)!=='1'){x++;continue;}var start=x;while(x<size&&row.charAt(x)==='1')x++;runs.push('M'+start+' '+y+'h'+(x-start)+'v1H'+start+'z');}}
+    var ns='http://www.w3.org/2000/svg',svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('viewBox','0 0 '+size+' '+size);svg.setAttribute('role','img');svg.setAttribute('aria-label','UPI payment QR for 8368268507@upi');svg.setAttribute('shape-rendering','crispEdges');svg.setAttribute('focusable','false');
+    var bg=document.createElementNS(ns,'rect');bg.setAttribute('width',String(size));bg.setAttribute('height',String(size));bg.setAttribute('fill','#fff');
+    var path=document.createElementNS(ns,'path');path.setAttribute('d',runs.join(''));path.setAttribute('fill','#000');svg.appendChild(bg);svg.appendChild(path);host.replaceChildren(svg);
+  }
+
   var translations = {
     en: {
       announcement:"DRA preparation in simple language — learn at your pace, understand in your language.",
@@ -34,6 +45,7 @@
     var picker=document.getElementById('siteLanguageSelect');var saved='hi';try{saved=localStorage.getItem('dra-site-language')||'hi';}catch(_e){}
     if(picker){picker.value=saved;picker.addEventListener('change',function(){setLanguage(picker.value);announce(picker.value==='en'?'Website language changed to English.':'Website की भाषा हिन्दी कर दी गई है।');});}
     setLanguage(saved);
+    renderLocalUpiQr();
     var menu=document.getElementById('mobileMenuToggle');var nav=document.getElementById('mainNav');
     if(menu&&nav){menu.addEventListener('click',function(){var opened=nav.classList.toggle('mobile-open');menu.setAttribute('aria-expanded',opened?'true':'false');menu.textContent=opened?'×':'☰';});nav.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){nav.classList.remove('mobile-open');menu.setAttribute('aria-expanded','false');menu.textContent='☰';});});}
     var copy=document.getElementById('copyUpi');if(copy){copy.addEventListener('click',async function(){var value='8368268507@upi';try{await navigator.clipboard.writeText(value);announce('UPI ID copied: '+value);}catch(_e){var t=document.createElement('textarea');t.value=value;document.body.appendChild(t);t.select();var ok=document.execCommand('copy');t.remove();announce(ok?'UPI ID copied: '+value:'Please copy UPI ID manually: '+value);}});}
