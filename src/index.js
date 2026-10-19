@@ -702,7 +702,7 @@ export default {
       headers.set('referrer-policy', 'strict-origin-when-cross-origin');
       headers.set('permissions-policy', 'camera=(), microphone=(), geolocation=()');
       headers.set('x-frame-options', 'DENY');
-      headers.set('content-security-policy', "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://*.supabase.co https://api.razorpay.com https://*.razorpay.com; frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://*.razorpay.com");
+      headers.set('content-security-policy', "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self' https://cdn.jsdelivr.net https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' https://lextalk.legal data:; connect-src 'self' https://*.supabase.co https://api.razorpay.com https://*.razorpay.com; frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://*.razorpay.com");
       if (url.pathname.endsWith('.html') || url.pathname === '/' || url.pathname === '/auth-config.js') headers.set('cache-control', 'no-store, max-age=0');
       return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
     }
