@@ -26,7 +26,7 @@
     var selected=lang==='en'?'en':'hi';
     document.documentElement.lang=selected;
     var dict=translations.en;
-    document.querySelectorAll('[data-i18n]').forEach(function(node){var key=node.getAttribute('data-i18n');if(selected==='en'&&dict[key])node.textContent=dict[key];else if(node.dataset.hi)node.textContent=node.dataset.hi;});
+    document.querySelectorAll('[data-i18n]').forEach(function(node){var key=node.getAttribute('data-i18n');if(!node.dataset.hiOriginal)node.dataset.hiOriginal=node.textContent;var original=node.dataset.hiOriginal;if(selected==='en'&&dict[key])node.textContent=dict[key];else node.textContent=original;});
     try{localStorage.setItem('dra-site-language',selected);}catch(_e){}
     var picker=document.getElementById('siteLanguageSelect');if(picker&&picker.value!==selected)picker.value=selected;
   }
