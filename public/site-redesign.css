@@ -5,3 +5,24 @@
 .logo-fallback{font-weight:950;letter-spacing:.035em;color:#10243a;white-space:nowrap;display:inline-block;font-size:.9rem}
 .footer-brand .logo-fallback{color:#fff;font-size:1.15rem}
 .contact-company .logo-fallback,.legal-header .logo-fallback{font-size:1rem}
+
+/* YouTube subscription verification and manually issued learner discount */
+.discount-offer-section{padding-top:58px;padding-bottom:58px}
+.discount-offer-panel{display:grid;grid-template-columns:1.1fr .9fr;gap:28px;padding:clamp(24px,4vw,42px);border-radius:27px;background:linear-gradient(130deg,#10243a 0%,#173f56 55%,#086d67 100%);box-shadow:0 22px 58px rgba(16,36,58,.14);color:#fff;position:relative;overflow:hidden}
+.discount-offer-panel:before{content:"";position:absolute;width:320px;height:320px;border:1px solid rgba(255,255,255,.09);border-radius:50%;top:-210px;right:20%;box-shadow:0 0 0 45px rgba(255,255,255,.025),0 0 0 95px rgba(255,255,255,.02);pointer-events:none}
+.discount-offer-main,.discount-offer-side{position:relative;z-index:1}
+.discount-offer-main .section-kicker{color:#8af0d1}
+.discount-offer-main h2{font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.2;letter-spacing:-.03em;margin:11px 0 14px;color:#fff}
+.discount-offer-main>p{line-height:1.85;color:#dceaf0;max-width:670px}
+.discount-offer-actions{display:flex;flex-wrap:wrap;gap:11px;margin:22px 0 12px}
+.btn-youtube-discount{background:#fff0f0;border-color:#fff0f0;color:#b91c2b!important}
+.discount-offer-main>small{display:block;color:#bfd5df;font-size:.79rem;line-height:1.7}
+.discount-offer-side{background:#fff;color:#10243a;border-radius:20px;padding:23px;align-self:center;box-shadow:0 15px 36px rgba(0,0,0,.12)}
+.discount-gift{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:#e0f8ed;color:#087f65;font-size:1.5rem;font-weight:950;margin-bottom:13px}
+.discount-offer-side>strong{font-size:1.1rem;display:block;margin-bottom:13px}
+.discount-step{display:flex;align-items:flex-start;gap:11px;padding:12px 0;border-bottom:1px solid #edf1f5}
+.discount-step>span{display:grid;place-items:center;flex:none;width:31px;height:31px;border-radius:9px;background:#e8f7f2;color:#09836a;font-weight:950;font-size:.76rem}
+.discount-step p{margin:3px 0 0;color:#526a7f;font-size:.86rem;line-height:1.65}
+.discount-safety{font-size:.76rem;line-height:1.7;color:#61778a;margin:14px 0 0;background:#f3f8fb;padding:11px;border-radius:10px}
+@media(max-width:860px){.discount-offer-panel{grid-template-columns:1fr}}
+@media(max-width:560px){.discount-offer-section{padding-top:42px;padding-bottom:42px}.discount-offer-panel{padding:22px 17px;border-radius:20px}.discount-offer-actions{display:grid}.discount-offer-actions .btn{width:100%;justify-content:center}.discount-offer-side{padding:18px}}
